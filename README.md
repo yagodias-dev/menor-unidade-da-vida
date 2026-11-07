@@ -17,6 +17,8 @@ css/animacoes.css     keyframes, revelações ao rolar, cursor, movimento reduzi
 js/dados.js           conteúdo em objetos (partes da célula, rótulos, textos da viagem)
 js/core.js            tema, menu, barra de leitura, revelações, rótulos, painel, lupa
 js/animacoes.js       abertura com partículas, viagem de escala, membrana viva
+testes/teste.mjs      testes automáticos (dados + navegação no Chrome)
+testes/cdp.mjs        mini-cliente do Chrome usado pelos testes
 README.md             este arquivo
 ```
 
@@ -30,7 +32,8 @@ Arquivos que chegam nas próximas etapas: `js/celula3d.js`, `js/membrana.js`, `j
 ### Como adicionar uma ilustração clicável
 1. Desenhe o SVG com `class="ilustracao"` dentro de `<div class="figura-interativa" data-figura="nome">`.
 2. Marque cada parte com `data-parte="chave"` (a chave precisa existir em `DADOS.partes`, no `js/dados.js`).
-3. Cadastre os rótulos em `DADOS.figuras.nome` (posição da ponta da seta e lado). No celular, a figura troca os nomes por números automaticamente.
+3. Cada parte tem quatro textos: `simples` (até 15 palavras, com uma comparação do dia a dia), `tecnico` (termos corretos, cada um explicado entre parênteses), `lembrar` (dica de memória; só use origem de palavra que esteja conferida) e `curiosidade`.
+4. Cadastre os rótulos em `DADOS.figuras.nome` (posição da ponta da seta e lado). No celular, a figura troca os nomes por números automaticamente.
 
 ---
 
@@ -43,6 +46,18 @@ python -m http.server 8000
 ```
 
 Depois acesse `http://localhost:8000`.
+
+### Testes automáticos
+
+Precisa do [Node.js](https://nodejs.org) 22 ou mais novo e do Google Chrome instalados. Na pasta do projeto, rode:
+
+```bash
+node testes/teste.mjs
+```
+
+O teste confere os dados (todas as partes com os quatro textos, frase simples com até 15 palavras, nenhuma chave faltando) e depois abre o site num Chrome invisível, no tamanho de computador e de celular. Lá ele confere o painel, o teclado, a acessibilidade e as animações. No fim aparece algo como `67/67 verificações OK`. As fotos de cada etapa ficam em `testes/fotos/` (essa pasta não vai para o Git).
+
+Se o Chrome estiver em outro lugar, informe o caminho: `CHROME="/caminho/do/chrome" node testes/teste.mjs`.
 
 ---
 
@@ -84,7 +99,7 @@ Todos os caminhos do site são relativos (`css/...`, `js/...`), então ele funci
 - **Linha do tempo:** cada marcador se divide e a célula-filha desce até o próximo marco ("toda célula vem de outra célula").
 - **Membrana viva:** fosfolipídios cor-de-rosa "marcados" deixam um rastro ao passear para os lados (difusão lateral), sempre na mesma camada; quanto maior a fluidez, mais longe vão.
 - **Experimento de Frye e Edidin:** as proteínas marcadas deslizam pela membrana até se misturarem; o botão **No frio** deixa a mistura bem mais lenta. O tempo da animação é ilustrativo.
-- **Painel de informações:** brota do ponto exato que foi tocado.
+- **Painel de informações:** brota do ponto exato que foi tocado. Mostra “Em poucas palavras” (em destaque), “Explicação técnica”, “Para lembrar” (caixa com lâmpada) e “Curiosidade”.
 
 ## Paleta de cores
 

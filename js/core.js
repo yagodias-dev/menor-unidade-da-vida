@@ -373,7 +373,9 @@
     if (!d) return;
     C.qs('#painel-tag').textContent = d.grupo || '';
     C.qs('#painel-titulo').textContent = d.nome;
-    C.qs('#painel-funcao').textContent = d.funcao;
+    C.qs('#painel-simples').textContent = d.simples;
+    C.qs('#painel-tecnico').textContent = d.tecnico;
+    C.qs('#painel-lembrar').textContent = d.lembrar;
     C.qs('#painel-curiosidade').textContent = d.curiosidade;
     painel.style.setProperty('--cor', 'var(--' + (d.cor || 'ciano') + ')');
     painel.hidden = false;

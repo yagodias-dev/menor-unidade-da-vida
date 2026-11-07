@@ -539,6 +539,13 @@ section { scroll-margin-top: var(--topo-h); }
 .painel-bloco p { margin: 0; }
 .painel-curiosidade { padding: .8rem .9rem; margin-top: 1rem; border-radius: 12px; background: var(--superficie-2); }
 .painel-curiosidade h4 { margin-top: 0; color: var(--ambar); }
+.painel-simples { margin-top: .9rem; padding-left: .8rem; border-left: 4px solid var(--cor, var(--ciano)); }
+.painel-simples h4 { margin-top: 0; }
+.painel-simples p { font-size: 1.18rem; font-weight: 700; line-height: 1.35; color: var(--texto); }
+.painel-lembrar { padding: .8rem .9rem; margin-top: 1rem; border-radius: 12px; background: var(--superficie-2); border: 1.5px dashed var(--lima); }
+.painel-lembrar h4 { margin-top: 0; color: var(--lima); display: flex; align-items: center; gap: .4rem; }
+.painel-icone { width: 1.15rem; height: 1.15rem; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.painel-lembrar + .painel-curiosidade { margin-top: .75rem; }
 
 /* ---------- Membrana viva ---------- */
 .membrana-viva { margin: 2.2rem 0 1rem; border-radius: calc(var(--raio) + 6px); border: 1px solid var(--borda); background: var(--fundo-2); overflow: hidden; box-shadow: var(--sombra); }
