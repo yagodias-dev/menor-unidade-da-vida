@@ -91,7 +91,7 @@
         <button class="icone-botao" id="btn-tema" type="button" aria-pressed="false" title="Alternar modo claro e escuro">
           <svg class="ic-lua" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
           <svg class="ic-sol" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1"/></svg>
-          <span class="sr">Modo claro ou escuro</span>
+          <span class="sr">Modo claro</span>
         </button>
       </div>
     </div>
@@ -464,12 +464,12 @@
 
         <!-- Membrana viva (canvas) -->
         <div class="membrana-viva" data-revelar="onda">
-          <canvas id="canvas-membrana" aria-describedby="mv-descricao"></canvas>
-          <p id="mv-descricao" class="sr">Animação de uma membrana em duas camadas que ondula. Os controles abaixo mudam a temperatura e a presença de colesterol, alterando a fluidez.</p>
+          <canvas id="canvas-membrana" role="img" aria-label="Simulação da membrana plasmática" aria-describedby="mv-descricao"></canvas>
+          <p id="mv-descricao" class="sr">Animação de uma membrana em duas camadas que ondula, com proteínas que deslizam para os lados. Os controles abaixo mudam a temperatura e a presença de colesterol, alterando a fluidez. O botão “Cutucar a membrana” cria uma onda.</p>
           <div class="mv-controles">
             <label class="controle">
-              <span>Temperatura</span>
-              <input type="range" id="mv-temp" min="0" max="100" value="55" aria-describedby="mv-fluidez">
+              <span id="mv-temp-nome">Temperatura</span>
+              <input type="range" id="mv-temp" min="0" max="100" value="55" aria-labelledby="mv-temp-nome" aria-describedby="mv-fluidez" aria-valuetext="morna">
               <span class="controle-escala"><span>Fria</span><span>Quente</span></span>
             </label>
             <label class="interruptor">
@@ -477,6 +477,7 @@
               <span class="interruptor-trilho" aria-hidden="true"></span>
               <span>Com colesterol</span>
             </label>
+            <button class="chip chip-acao" type="button" id="mv-cutucar">Cutucar a membrana</button>
             <p class="mv-leitura" id="mv-fluidez" aria-live="polite">Fluidez: média</p>
           </div>
           <p class="mv-dica">Passe o mouse ou toque na membrana: ela é fluida como um líquido.</p>

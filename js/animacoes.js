@@ -16,7 +16,12 @@
     var h1 = C.qs('[data-letras]');
     if (!h1) return;
     var texto = h1.textContent.trim();
-    h1.setAttribute('aria-label', texto);
+    /* Leitores de tela leem o texto inteiro (escondido visualmente);
+       as letras soltas ficam só para os olhos. aria-label em <h1> é lido de
+       forma irregular por alguns leitores, por isso o texto real fica no DOM. */
+    var leitura = document.createElement('span');
+    leitura.className = 'sr';
+    leitura.textContent = texto;
     var interno = document.createElement('span');
     interno.setAttribute('aria-hidden', 'true');
     var i = 0;
@@ -35,6 +40,7 @@
       if (k < arr.length - 1) interno.appendChild(document.createTextNode(' '));
     });
     h1.textContent = '';
+    h1.appendChild(leitura);
     h1.appendChild(interno);
   })();
 
@@ -429,6 +435,9 @@
       var nivel = f < 0.34 ? 'baixa' : (f < 0.67 ? 'média' : 'alta');
       var txt = 'Fluidez: ' + nivel + (col.checked ? ' — o colesterol amortece a mudança' : '');
       if (txt !== textoAnterior) { leitura.textContent = txt; textoAnterior = txt; }
+      /* Leitor de tela ouve "fria / morna / quente" em vez de um número solto */
+      var v = Number(temp.value);
+      temp.setAttribute('aria-valuetext', v < 34 ? 'fria' : (v < 67 ? 'morna' : 'quente'));
     }
 
     function onda(x, f) {
@@ -547,6 +556,12 @@
       if (!rodando) { t += 0.5; desenhar(); }
     });
     [temp, col].forEach(function (el) { el.addEventListener('input', function () { atualizarTexto(); if (!rodando) desenhar(); }); });
+    /* Alternativa pelo teclado (e para quem não usa mouse/toque): cria uma onda */
+    var cutucar = C.qs('#mv-cutucar');
+    if (cutucar) cutucar.addEventListener('click', function () {
+      ondas.push({ x: W * (0.25 + Math.random() * 0.5), t: t });
+      if (!rodando) { t += 0.5; desenhar(); }
+    });
 
     lerCores(); medir(); atualizarTexto(); desenhar();
     window.addEventListener('resize', function () { if (medir() && !rodando) desenhar(); });

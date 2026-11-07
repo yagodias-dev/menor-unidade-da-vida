@@ -153,6 +153,11 @@
   document.addEventListener('click', function (e) {
     if (menu.classList.contains('aberto') && !e.target.closest('#menu') && !e.target.closest('#menu-botao')) abrirMenu(false);
   });
+  /* Teclado: se o foco sair do menu aberto (Tab depois do último link), ele fecha */
+  menu.addEventListener('focusout', function (e) {
+    var para = e.relatedTarget;
+    if (menu.classList.contains('aberto') && para && !menu.contains(para) && para !== botaoMenu) abrirMenu(false);
+  });
 
   /* ---------------- Leitura: barra + mitose ---------------- */
   var leitura = C.qs('#leitura');
@@ -396,6 +401,12 @@
     painelOrigem = null;
   };
   C.qs('.painel-fechar', painel).addEventListener('click', C.fecharPainel);
+  /* Tocar fora do painel e fora das ilustrações também fecha (no celular ele cobre muito da tela) */
+  document.addEventListener('click', function (e) {
+    if (painel.hidden || !e.target.closest) return;
+    if (e.target.closest('#painel') || e.target.closest('.figura-interativa')) return;
+    C.fecharPainel();
+  });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') C.fecharPainel(); });
 
   function destacar(fig, chave) {
@@ -437,7 +448,9 @@
       b.setAttribute('data-parte', it.parte);
       if (exclusiva(it.parte)) b.setAttribute('data-exclusiva', '');
       b.style.setProperty('--cor', 'var(--' + (d.cor || 'ciano') + ')');
-      b.innerHTML = '<span class="leg-n" aria-hidden="true">' + it.n + '</span>' + it.texto.replace('\n', ' ');
+      b.innerHTML = '<span class="leg-n" aria-hidden="true">' + it.n + '</span>' + it.texto.replace('\n', ' ') +
+        /* Etiqueta que só aparece (e só é lida) no modo "Destacar o que é exclusivo" */
+        (exclusiva(it.parte) ? '<span class="leg-excl"><span class="sr">, </span>exclusiva</span>' : '');
       li.appendChild(b);
       leg.appendChild(li);
     });
@@ -472,6 +485,11 @@
     lente.className = 'lente';
     lente.setAttribute('aria-hidden', 'true');
     palco.appendChild(lente);
+    /* Dica para o toque: com a lupa ligada, a figura não rola a página */
+    var dica = document.createElement('p');
+    dica.className = 'lupa-dica';
+    dica.textContent = 'Lupa ligada: arraste o dedo sobre a figura. Para rolar a página, use a legenda ou desligue a lupa.';
+    palco.parentNode.insertBefore(dica, palco.nextSibling);
     var clone = null, Z = 2.4;
 
     function ligada() { return !botao || botao.getAttribute('aria-pressed') === 'true'; }
