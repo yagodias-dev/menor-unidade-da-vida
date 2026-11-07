@@ -134,7 +134,7 @@ window.DADOS.partes = {
     curiosidade: 'Sem organelas com membrana, quase tudo acontece nesse mesmo “cômodo”.'
   },
   flagelo: {
-    nome: 'Flagelo', cor: 'coral', grupo: 'Movimento',
+    nome: 'Flagelo bacteriano', cor: 'coral', grupo: 'Movimento',
     funcao: 'Filamento longo que gira como uma hélice e empurra a bactéria.',
     curiosidade: 'Tem um “motor” giratório na base. É bem diferente do flagelo das células eucariontes, que se dobra em vez de girar.'
   },
@@ -245,7 +245,7 @@ window.DADOS.figuras = {
       ['plasmideo', 'Plasmídeo', 250, 250, 'e'],
       ['parede_bact', 'Parede celular', 217, 280, 'e'],
       ['fimbria', 'Fímbrias', 416, 129, 'd'],
-      ['flagelo', 'Flagelo', 575, 220, 'd'],
+      ['flagelo', 'Flagelo\nbacteriano', 575, 220, 'd'],
       ['nucleoide', 'Nucleoide', 382, 235, 'd'],
       ['membrana_bact', 'Membrana', 461, 260, 'd']
     ]
@@ -271,7 +271,7 @@ window.DADOS.figuras = {
 window.DADOS.viagem = [
   { titulo: 'Corpo humano', texto: 'Visível a olho nu. O corpo é formado por órgãos, e os órgãos, por tecidos.', instrumento: 'Olho nu' },
   { titulo: 'Tecido', texto: 'Um grupo de células parecidas que trabalham juntas. Para ver, é preciso um microscópio óptico.', instrumento: 'Microscópio óptico' },
-  { titulo: 'Célula', texto: 'A menor unidade da vida. Toda célula tem membrana, citoplasma e material genético.', instrumento: 'Microscópio óptico' },
+  { titulo: 'Célula', texto: 'A menor unidade da vida. Com raras exceções, toda célula tem membrana, citoplasma e material genético.', instrumento: 'Microscópio óptico' },
   { titulo: 'Membrana plasmática', texto: 'Uma película finíssima de lipídios e proteínas. Seus detalhes só aparecem no microscópio eletrônico.', instrumento: 'Microscópio eletrônico' },
   { titulo: 'Molécula: o fosfolipídio', texto: 'A peça básica da membrana. Moléculas assim são estudadas com modelos e técnicas especiais.', instrumento: 'Modelos moleculares' }
 ];

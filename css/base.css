@@ -174,7 +174,7 @@ main:focus { outline: none; }
 }
 .leitura-celula {
   position: absolute; top: -13px; left: 0; width: 46px; height: 23px;
-  transform: translateX(calc(var(--p, 0) * (100vw - 46px)));
+  transform: translateX(var(--lx, 0px)); /* calculado em px pelo JS (100vw incluiria a barra de rolagem) */
   overflow: visible;
 }
 .leitura-celula .lc-a, .leitura-celula .lc-b { fill: var(--ciano); }
@@ -385,7 +385,11 @@ section { scroll-margin-top: var(--topo-h); }
 .figura-membrana { padding-bottom: 1rem; }
 
 .figura-palco { position: relative; touch-action: pan-y; }
-.figura-interativa.lupa-ligada .figura-palco.toque-lupa { touch-action: none; }
+/* O navegador decide se vai rolar no momento do toque; por isso o touch-action
+   precisa valer ANTES do dedo encostar, sempre que a lupa estiver ligada. */
+@media (pointer: coarse) {
+  .figura-interativa.lupa-ligada .figura-palco { touch-action: none; }
+}
 .ilustracao { width: 100%; height: auto; overflow: visible; user-select: none; -webkit-user-select: none; }
 
 /* Legenda clicável abaixo da ilustração */

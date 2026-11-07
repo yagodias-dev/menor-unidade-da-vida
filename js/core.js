@@ -160,13 +160,25 @@
     a: C.qs('.lc-a'), b: C.qs('.lc-b'), nucleo: C.qs('.lc-nucleo'),
     c: [C.qs('.lc-c1'), C.qs('.lc-c2'), C.qs('.lc-c3'), C.qs('.lc-c4')]
   };
-  var ultimoY = 0;
+  var ultimoY = 0, ultimoValor = -1;
   var topo = C.qs('#topo');
+  var medidas = { total: 0, largura: 0 };
+  function medirLeitura() {
+    medidas.total = document.documentElement.scrollHeight - window.innerHeight;
+    medidas.largura = leitura.clientWidth;
+  }
+  medirLeitura();
+  window.addEventListener('resize', medirLeitura);
+  window.addEventListener('load', medirLeitura);
+  /* A altura da página muda quando as fontes carregam ou uma seção cresce */
+  if ('ResizeObserver' in window) new ResizeObserver(function () { medirLeitura(); }).observe(document.body);
   function atualizarLeitura() {
-    var total = document.documentElement.scrollHeight - window.innerHeight;
+    var total = medidas.total;
     var p = total > 0 ? C.limitar(window.scrollY / total, 0, 1) : 0;
     leitura.style.setProperty('--p', p.toFixed(4));
-    leitura.setAttribute('aria-valuenow', Math.round(p * 100));
+    leitura.style.setProperty('--lx', (p * (medidas.largura - 46)).toFixed(1) + 'px');
+    var valor = Math.round(p * 100);
+    if (valor !== ultimoValor) { ultimoValor = valor; leitura.setAttribute('aria-valuenow', valor); }
     /* Fases simplificadas: intérfase → prófase/metáfase → anáfase → telófase e citocinese */
     var sep = C.suave(0.5, 0.97, p) * 14;          // separação das células-filhas
     lc.a.setAttribute('cx', 30 - sep);
@@ -187,10 +199,13 @@
     });
     /* Esconde o cabeçalho ao descer rápido e mostra ao subir */
     var y = window.scrollY;
-    if (!menu.classList.contains('aberto')) topo.classList.toggle('escondido', y > ultimoY + 4 && y > 600);
+    var focoNoTopo = topo.contains(document.activeElement);
+    if (!menu.classList.contains('aberto') && !focoNoTopo) topo.classList.toggle('escondido', y > ultimoY + 4 && y > 600);
     if (y < ultimoY - 4 || y < 600) topo.classList.remove('escondido');
     ultimoY = y;
   }
+  /* Foco do teclado dentro do cabeçalho: ele sempre aparece */
+  topo.addEventListener('focusin', function () { topo.classList.remove('escondido'); });
   var pedidoLeitura = false;
   window.addEventListener('scroll', function () {
     if (pedidoLeitura) return;
@@ -273,7 +288,7 @@
       el.classList.toggle('sobre', !!interativo);
       if (!rodando) { rodando = true; requestAnimationFrame(passo); }
     }, { passive: true });
-    document.addEventListener('mouseleave', function () { el.classList.add('oculto'); });
+    document.documentElement.addEventListener('mouseleave', function () { el.classList.add('oculto'); });
   })();
 
   /* ---------------- Bicamada gerada (figura da membrana) ---------------- */
@@ -356,11 +371,19 @@
     C.qs('#painel-funcao').textContent = d.funcao;
     C.qs('#painel-curiosidade').textContent = d.curiosidade;
     painel.style.setProperty('--cor', 'var(--' + (d.cor || 'ciano') + ')');
-    if (evento && evento.clientX) {
-      painel.style.setProperty('--ox', '0%');
-      painel.style.setProperty('--oy', '100%');
-    }
     painel.hidden = false;
+    /* O painel "brota" do ponto tocado (ou do botão da legenda, no teclado) */
+    var px = null, py = null;
+    if (evento && (evento.clientX || evento.clientY)) { px = evento.clientX; py = evento.clientY; }
+    else if (origem && origem.getBoundingClientRect) {
+      var ro = origem.getBoundingClientRect();
+      px = ro.left + ro.width / 2; py = ro.top + ro.height / 2;
+    }
+    if (px !== null) {
+      var rp = painel.getBoundingClientRect();
+      painel.style.setProperty('--ox', Math.round(px - rp.left) + 'px');
+      painel.style.setProperty('--oy', Math.round(py - rp.top) + 'px');
+    }
     painel.classList.remove('abrindo'); void painel.offsetWidth; painel.classList.add('abrindo');
     painelOrigem = origem || null;
     C.qs('#painel-titulo').focus({ preventScroll: true });
@@ -397,6 +420,13 @@
 
     var itens = C.rotular(svg, cfg);
 
+    /* Partes exclusivas: o rótulo herda a marcação do desenho
+       (senão ele seria apagado junto com as partes comuns no modo "destacar") */
+    function exclusiva(parte) { return !!C.qs('[data-parte="' + parte + '"][data-exclusiva]:not(.rotulo)', svg); }
+    C.qsa('.rotulo', svg).forEach(function (g) {
+      if (exclusiva(g.getAttribute('data-parte'))) g.setAttribute('data-exclusiva', '');
+    });
+
     /* Legenda numerada e clicável (também é o caminho pelo teclado) */
     var leg = C.qs('.legenda', fig);
     itens.forEach(function (it) {
@@ -405,6 +435,7 @@
       var b = document.createElement('button');
       b.type = 'button';
       b.setAttribute('data-parte', it.parte);
+      if (exclusiva(it.parte)) b.setAttribute('data-exclusiva', '');
       b.style.setProperty('--cor', 'var(--' + (d.cor || 'ciano') + ')');
       b.innerHTML = '<span class="leg-n" aria-hidden="true">' + it.n + '</span>' + it.texto.replace('\n', ' ');
       li.appendChild(b);
@@ -459,11 +490,21 @@
       C.qsa('.ativa', clone).forEach(function (n) { n.classList.remove('ativa'); });
       lente.appendChild(clone);
     }
-    function esconder() { lente.classList.remove('ativa'); }
+    var pedido = null, ultimoEv = null;
+    function esconder() {
+      if (pedido) { cancelAnimationFrame(pedido); pedido = null; }
+      lente.classList.remove('ativa');
+    }
     function mover(e) {
+      /* no máximo uma atualização por quadro */
+      ultimoEv = { clientX: e.clientX, clientY: e.clientY, pointerType: e.pointerType };
+      if (pedido) return;
+      pedido = requestAnimationFrame(function () { pedido = null; moverAgora(ultimoEv); });
+    }
+    function moverAgora(e) {
       var r = svg.getBoundingClientRect();
       var x = e.clientX - r.left, y = e.clientY - r.top;
-      if (x < 0 || y < 0 || x > r.width || y > r.height) { esconder(); return; }
+      if (x < 0 || y < 0 || x > r.width || y > r.height) { lente.classList.remove('ativa'); return; }
       garantirClone();
       var L = lente.offsetWidth;
       clone.style.width = (r.width * Z) + 'px';

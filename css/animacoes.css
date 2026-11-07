@@ -41,8 +41,10 @@
 @keyframes letra-surge { to { opacity: 1; transform: none; filter: blur(0); } }
 .js .hero-kicker, .js .hero-sub, .js .hero-acoes { opacity: 0; transform: translateY(16px); animation: subir .9s var(--ease) forwards; }
 .js .hero-kicker { animation-delay: .7s; }
-.js .hero-sub { animation-delay: 2.3s; }
-.js .hero-acoes { animation-delay: 2.6s; }
+.js .hero-sub { animation-delay: 1.7s; }
+.js .hero-acoes { animation-delay: 1.9s; }
+/* Quem chega pelo teclado não espera a animação: o botão focado aparece na hora */
+.js .hero-acoes:focus-within { animation: none; opacity: 1; transform: none; }
 @keyframes subir { to { opacity: 1; transform: none; } }
 
 /* Saída do hero durante o mergulho (variável --mergulho de 0 a 1, controlada por JS) */
@@ -58,7 +60,9 @@
 
 /* Partes "exclusivas" pulsando no visor */
 .visor.destacar .ilustracao [data-parte]:not([data-exclusiva]) { opacity: .2; }
-.visor.destacar .ilustracao [data-exclusiva] { animation: exclusiva 1.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.visor.destacar .ilustracao [data-exclusiva]:not(.rotulo) { animation: exclusiva 1.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.visor.destacar .legenda button:not([data-exclusiva]) { opacity: .45; }
+.visor.destacar .legenda button[data-exclusiva] { border-color: var(--lima); color: var(--texto); }
 @keyframes exclusiva { 50% { filter: drop-shadow(0 0 8px var(--lima)) brightness(1.4); } }
 
 /* Troca de aba: a célula "se forma" (zoom + desfoque) */

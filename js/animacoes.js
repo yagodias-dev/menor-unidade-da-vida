@@ -130,13 +130,17 @@
       lerCores();
     }
 
+    /* Devolve false se nada mudou (no celular, a barra de endereço dispara
+       "resize" sem mudar o canvas: redimensionar à toa apagaria a imagem) */
     function medir() {
-      dpr = C.pixelRatio();
-      W = canvas.clientWidth; H = canvas.clientHeight;
+      var nd = C.pixelRatio(), nw = canvas.clientWidth, nh = canvas.clientHeight;
+      if (nw === W && nh === H && nd === dpr) return false;
+      dpr = nd; W = nw; H = nh;
       canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
       if (W > 760) { cx = W * 0.68; cy = H * 0.52; R = Math.min(H * 0.34, W * 0.24); }
       else { cx = W * 0.5; cy = H * 0.2; R = Math.min(W * 0.31, H * 0.125); }
       hero.style.setProperty('--rx', Math.round(cx / W * 100) + '%');
+      return true;
     }
 
     function alvoDe(p, t) {
@@ -212,8 +216,18 @@
     }
 
     medir(); criar(); aoRolar();
-    window.addEventListener('resize', function () { var antes = W; medir(); if (Math.abs(antes - W) > 120) criar(); if (!rodando) quadro(performance.now()); });
-    window.addEventListener('scroll', aoRolar, { passive: true });
+    window.addEventListener('resize', function () {
+      var antes = W;
+      if (!medir()) return;
+      if (Math.abs(antes - W) > 120) criar();
+      if (!rodando) quadro(performance.now());
+    });
+    var pedidoRolar = false;
+    window.addEventListener('scroll', function () {
+      if (pedidoRolar) return;
+      pedidoRolar = true;
+      requestAnimationFrame(function () { pedidoRolar = false; aoRolar(); });
+    }, { passive: true });
     hero.addEventListener('pointermove', function (e) { var r = canvas.getBoundingClientRect(); mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top; });
     hero.addEventListener('pointerleave', function () { mouse.x = mouse.y = -9999; });
     C.quandoVisivel(hero, function (v) { visivel = v; ligar(); });
@@ -231,13 +245,15 @@
     var regua = C.qs('#viagem-regua');
     var dados = window.DADOS.viagem;
 
-    /* Tecido: mosaico de células hexagonais com núcleo */
+    /* Tecido: mosaico de células hexagonais com núcleo.
+       A grade é ancorada para que uma célula fique exatamente no centro (200,200):
+       é nela que o zoom entra. */
     var tecido = C.qs('[data-gerar="tecido"]', secao);
     if (tecido) {
       var r = 42, w = Math.sqrt(3) * r;
-      for (var lin = -2; lin < 8; lin++) {
-        for (var col = -2; col < 7; col++) {
-          var x = col * w + (lin % 2 ? w / 2 : 0) + 200 - 2.5 * w, y = lin * r * 1.5 + 200 - 4 * r * 1.5 + 12;
+      for (var lin = -4; lin <= 4; lin++) {
+        for (var col = -4; col <= 4; col++) {
+          var x = 200 + col * w + (Math.abs(lin) % 2 ? w / 2 : 0), y = 200 + lin * r * 1.5;
           var pts = [];
           for (var k = 0; k < 6; k++) { var a = Math.PI / 180 * (60 * k - 30); pts.push((x + (r - 2) * Math.cos(a)).toFixed(1) + ',' + (y + (r - 2) * Math.sin(a)).toFixed(1)); }
           var foco = Math.abs(x - 200) < 5 && Math.abs(y - 200) < 30;
@@ -256,7 +272,7 @@
       g.appendChild(C.svg('path', { 'class': 'vj-prot', d: 'M104,160 C112,148 142,148 148,160 C156,190 152,250 148,280 C140,292 112,292 104,280 C98,250 98,190 104,160 Z' }));
       g.appendChild(C.svg('path', { 'class': 'vj-prot', d: 'M266,160 C272,150 292,150 298,160 C302,190 302,250 298,280 C292,290 272,290 266,280 C262,250 262,190 266,160 Z' }));
       bic.appendChild(g);
-      bic.appendChild(C.svg('circle', { 'class': 'vj-alvo', cx: 200, cy: 170, r: 12 }));
+      bic.appendChild(C.svg('circle', { 'class': 'vj-alvo', cx: 200, cy: 162, r: 12 }));  // sobre a cabeça do fosfolipídio x=200
     }
 
     dados.forEach(function (d, i) {
@@ -270,7 +286,13 @@
 
     var ultimoAtivo = -1, rodando = false, visivel = false;
     function atualizar() {
-      if (C.movimentoReduzido()) { camadas.forEach(function (c) { c.style.transform = ''; c.style.opacity = ''; }); return; }
+      if (C.movimentoReduzido()) {
+        /* Versão estática: limpa tudo o que a rolagem escreveu (inclusive visibility) */
+        camadas.forEach(function (c) { c.style.transform = ''; c.style.opacity = ''; c.style.visibility = ''; c.style.transformOrigin = ''; });
+        itensLeg.forEach(function (li) { li.classList.remove('ativa'); });
+        ultimoAtivo = -1;
+        return;
+      }
       var inicio = secao.offsetTop, curso = secao.offsetHeight - window.innerHeight;
       var prog = C.limitar((window.scrollY - inicio) / curso, 0, 1);
       var rr = prog * 5, i = Math.min(4, Math.floor(rr)), u = rr - i;
@@ -325,8 +347,9 @@
       cores = { cabeca: C.cor('ciano'), cauda: C.cor('ambar'), prot: C.cor('violeta'), col: C.cor('coral'), fundo: C.cor('fundo-2'), acucar: C.cor('lima') };
     }
     function medir() {
-      dpr = C.pixelRatio();
-      W = canvas.clientWidth; H = canvas.clientHeight;
+      var nd = C.pixelRatio(), nw = canvas.clientWidth, nh = canvas.clientHeight;
+      if (nw === W && nh === H && nd === dpr) return false;   // nada mudou: não apaga o canvas
+      dpr = nd; W = nw; H = nh;
       canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
       var passo = C.limitar(W / 64, 9, 15);
       lipidios = [];
@@ -340,6 +363,7 @@
         { x: W * 0.86, w: Math.max(30, W * 0.045), v: 12, canal: false }
       ];
       lipidios.passo = passo;
+      return true;
     }
     function fluidez() {
       var T = temp.value / 100;
@@ -465,7 +489,7 @@
     [temp, col].forEach(function (el) { el.addEventListener('input', function () { atualizarTexto(); if (!rodando) desenhar(); }); });
 
     lerCores(); medir(); atualizarTexto(); desenhar();
-    window.addEventListener('resize', function () { medir(); if (!rodando) desenhar(); });
+    window.addEventListener('resize', function () { if (medir() && !rodando) desenhar(); });
     C.quandoVisivel(canvas, function (v) { visivel = v; ligar(); });
     C.ouvir('tema', function () { lerCores(); if (!rodando) desenhar(); });
     C.ouvir('efeitos', ligar);

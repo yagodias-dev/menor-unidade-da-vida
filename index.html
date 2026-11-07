@@ -13,6 +13,8 @@
     (function () {
       var d = document.documentElement;
       d.classList.add('js');
+      /* Sem escolha salva, segue o modo claro/escuro do sistema */
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) d.setAttribute('data-tema', 'claro');
       try {
         var t = localStorage.getItem('tema');
         if (t === 'claro' || t === 'escuro') d.setAttribute('data-tema', t);
@@ -171,7 +173,7 @@
             </svg>
           </figure>
 
-          <figure class="escala" data-i="3" data-foco="50 42.5">
+          <figure class="escala" data-i="3" data-foco="50 40.5">
             <svg viewBox="0 0 400 400" role="img" aria-label="Trecho da membrana: duas camadas de fosfolipídios com proteínas" data-gerar="bicamada-viagem"></svg>
           </figure>
 
@@ -351,7 +353,7 @@
               <div class="figura-palco">
                 <svg class="ilustracao" viewBox="0 0 760 440" role="img" aria-labelledby="t-bacteria d-bacteria">
                   <title id="t-bacteria">Bactéria em corte</title>
-                  <desc id="d-bacteria">Bactéria em forma de bastão, com cápsula, parede celular, membrana, nucleoide com DNA circular, plasmídeos, ribossomos, fímbrias na superfície e um flagelo em uma das pontas.</desc>
+                  <desc id="d-bacteria">Bactéria em forma de bastão, com cápsula, parede celular, membrana, nucleoide com DNA circular, plasmídeos, ribossomos, fímbrias na superfície e um flagelo bacteriano em uma das pontas.</desc>
                   <g transform="translate(60,0)">
                     <g class="f-fimbria" data-parte="fimbria" data-exclusiva><path d="M200,137 L195,118 M240,136 L238,114 M300,136 L303,114 M356,138 L362,117 M220,304 L214,324 M290,304 L292,326 M360,302 L368,322"/></g>
                     <path class="f-flagelo" data-parte="flagelo" data-exclusiva d="M438,220 c12,-15 24,15 36,0 s24,-15 36,0 s24,15 36,0"/>
@@ -360,7 +362,7 @@
                     <rect class="f-cito" data-parte="citoplasma_bact" x="134" y="159" width="282" height="122" rx="61"/>
                     <rect class="f-membrana" data-parte="membrana_bact" x="134" y="159" width="282" height="122" rx="61"/>
                     <path class="f-nucleoide" data-parte="nucleoide" data-exclusiva d="M230,215 C240,180 290,185 300,205 C312,230 270,250 255,232 C240,214 280,196 310,214 C340,232 320,262 285,258 C250,254 225,245 230,215 Z"/>
-                    <g class="f-plasmideo" data-parte="plasmideo" data-exclusiva><circle cx="360" cy="195" r="9"/><circle cx="190" cy="250" r="7"/></g>
+                    <g class="f-plasmideo" data-parte="plasmideo"><circle cx="360" cy="195" r="9"/><circle cx="190" cy="250" r="7"/></g>
                     <g class="f-ribo" data-parte="ribossomo70"><circle cx="170" cy="190" r="3.2"/><circle cx="200" cy="180" r="3.2"/><circle cx="345" cy="250" r="3.2"/><circle cx="375" cy="235" r="3.2"/><circle cx="330" cy="180" r="3.2"/><circle cx="160" cy="222" r="3.2"/><circle cx="215" cy="265" r="3.2"/><circle cx="390" cy="210" r="3.2"/></g>
                     <g class="detalhe" aria-hidden="true"><text x="275" y="146" text-anchor="middle">peptidoglicano</text><text x="270" y="275" text-anchor="middle">DNA circular</text></g>
                   </g>
@@ -670,11 +672,12 @@
 
   <!-- Painel de informações (abre ao tocar numa parte das ilustrações) -->
   <aside class="painel" id="painel" role="dialog" aria-modal="false" aria-labelledby="painel-titulo" hidden>
-    <button class="painel-fechar" type="button" aria-label="Fechar painel">×</button>
     <p class="painel-tag" id="painel-tag"></p>
     <h3 class="painel-titulo" id="painel-titulo" tabindex="-1"></h3>
     <div class="painel-bloco"><h4>O que faz</h4><p id="painel-funcao"></p></div>
     <div class="painel-bloco painel-curiosidade"><h4>Curiosidade</h4><p id="painel-curiosidade"></p></div>
+    <!-- O botão vem depois do conteúdo no DOM: o Tab a partir do título chega nele -->
+    <button class="painel-fechar" type="button" aria-label="Fechar painel">×</button>
   </aside>
 
   <script src="js/dados.js" defer></script>
