@@ -275,6 +275,14 @@
     }, { passive: true });
     hero.addEventListener('pointermove', function (e) { var r = canvas.getBoundingClientRect(); mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top; });
     hero.addEventListener('pointerleave', function () { mouse.x = mouse.y = -9999; });
+    /* Tocar/clicar na célula: uma onda percorre a célula do centro até a membrana */
+    hero.addEventListener('pointerdown', function (e) {
+      if (e.target.closest && e.target.closest('a, button')) return;
+      var r = canvas.getBoundingClientRect();
+      var dx = (e.clientX - r.left - cx) / (R * 1.12), dy = (e.clientY - r.top - cy) / (R * 0.9);
+      if (dx * dx + dy * dy > 1.4) return;                 // só vale tocando na célula (ou bem perto)
+      toqueOnda.t = (performance.now() - inicio) / 1000;
+    });
     C.quandoVisivel(hero, function (v) { visivel = v; ligar(); });
     C.ouvir('tema', function () { lerCores(); if (!rodando) quadro(performance.now()); });
     C.ouvir('efeitos', function () { aoRolar(); ligar(); });
@@ -288,6 +296,7 @@
     var camadas = C.qsa('.escala', secao);
     var legendas = C.qs('#viagem-legendas');
     var regua = C.qs('#viagem-regua');
+    var lente = C.qs('.viagem-lente', secao);
     var dados = window.DADOS.viagem;
 
     /* Tecido: mosaico de células hexagonais com núcleo.
@@ -329,7 +338,7 @@
     var itensLeg = C.qsa('li', legendas), itensReg = C.qsa('li', regua);
     var focos = camadas.map(function (c) { return c.getAttribute('data-foco').split(' ').map(Number); });
 
-    var ultimoAtivo = -1, visivel = false, ultimoProg = -1;
+    var ultimoAtivo = -1, visivel = false, ultimoProg = -1, ultimaTrava = -1;
     /* Medidas guardadas: ler offsetTop a cada quadro forçava o navegador a recalcular o layout */
     var med = { inicio: 0, curso: 1 };
     function medirViagem() {
@@ -347,7 +356,9 @@
         /* Versão estática: limpa tudo o que a rolagem escreveu (inclusive visibility) */
         camadas.forEach(function (c) { c.style.transform = ''; c.style.opacity = ''; c.style.visibility = ''; c.style.transformOrigin = ''; });
         itensLeg.forEach(function (li) { li.classList.remove('ativa'); });
-        ultimoAtivo = -1;
+        camadas.forEach(function (c) { c.classList.remove('travando'); });
+        secao.classList.remove('travando');
+        ultimoAtivo = -1; ultimaTrava = -1;
         return;
       }
       var prog = C.limitar((window.scrollY - med.inicio) / med.curso, 0, 1);
@@ -374,6 +385,14 @@
         c.style.transform = 'translate(' + tx.toFixed(2) + '%,' + ty.toFixed(2) + '%) scale(' + s.toFixed(4) + ')';
         c.style.opacity = op.toFixed(3);
       });
+      /* Anel de foco gira com o zoom; a mira "trava" logo antes de cada mergulho */
+      lente.style.setProperty('--vj', t.toFixed(3));   // só na lente: evita recalcular o estilo da seção inteira
+      var trava = i < 4 && u > 0.18 && u < 0.4 ? i : -1;
+      if (trava !== ultimaTrava) {
+        ultimaTrava = trava;
+        secao.classList.toggle('travando', trava >= 0);
+        camadas.forEach(function (c, n) { c.classList.toggle('travando', n === trava); });
+      }
       var ativo = Math.round(t);
       if (ativo !== ultimoAtivo) {
         ultimoAtivo = ativo;
@@ -394,6 +413,62 @@
     atualizar();
   })();
 
+  /* ============ 5. Experimento de Frye e Edidin ============
+     As proteínas marcadas começam separadas (cada cor numa metade da célula
+     fundida) e deslizam pela membrana até se misturarem. "No frio" deixa a
+     mistura bem mais lenta, como descrito no texto. O tempo é ilustrativo. */
+  (function experimento() {
+    var bloco = C.qs('.experimento');
+    if (!bloco) return;
+    var elipse = C.qs('.ex-b ellipse', bloco);
+    var pontos = C.qsa('.ex-b circle', bloco);
+    var btnFundir = C.qs('#ex-fundir'), btnFrio = C.qs('#ex-frio'), status = C.qs('#ex-status');
+    var ECX = +elipse.getAttribute('cx'), ECY = +elipse.getAttribute('cy');
+    var RX = +elipse.getAttribute('rx'), RY = +elipse.getAttribute('ry');
+    var inicioEsq = [120, 160, 200, 240], inicioDir = [-60, -20, 20, 60];
+    var ie = 0, id = 0;
+    var dados = pontos.map(function (c) {
+      var x = +c.getAttribute('cx'), y = +c.getAttribute('cy');
+      var fim = Math.atan2((y - ECY) / RY, (x - ECX) / RX);            // ângulo final (posição do desenho)
+      var lado1 = c.classList.contains('ex-p1');
+      var ini = (lado1 ? inicioEsq[ie++ % 4] : inicioDir[id++ % 4]) * Math.PI / 180;
+      var delta = Math.atan2(Math.sin(fim - ini), Math.cos(fim - ini)); // menor caminho pela membrana
+      return { el: c, ini: ini, delta: delta, fase: Math.random() * 6.28, fx: x, fy: y };
+    });
+    function pos(d, k) {
+      var a = d.ini + d.delta * k + Math.sin(k * 9 + d.fase) * 0.12 * (1 - k);  // leve "vaivém" de difusão
+      d.el.setAttribute('cx', (ECX + Math.cos(a) * RX).toFixed(1));
+      d.el.setAttribute('cy', (ECY + Math.sin(a) * RY).toFixed(1));
+    }
+    var pedido = null;
+    function tocar() {
+      if (pedido) cancelAnimationFrame(pedido);
+      var frio = btnFrio.getAttribute('aria-pressed') === 'true';
+      if (C.movimentoReduzido()) {
+        dados.forEach(function (d) { d.el.setAttribute('cx', d.fx); d.el.setAttribute('cy', d.fy); });
+        status.textContent = 'Cores misturadas por toda a membrana' + (frio ? ' (no frio, isso demora bem mais).' : '.');
+        return;
+      }
+      var dur = frio ? 11000 : 3000, t0 = performance.now();
+      status.textContent = frio ? 'No frio: as proteínas se movem devagar…' : 'As proteínas estão se espalhando…';
+      (function passo(agora) {
+        var k = C.limitar((agora - t0) / dur, 0, 1);
+        var e = 1 - Math.pow(1 - k, 3);
+        dados.forEach(function (d) { pos(d, e); });
+        if (k < 1) pedido = requestAnimationFrame(passo);
+        else { pedido = null; status.textContent = 'Cores misturadas por toda a membrana.'; }
+      })(t0);
+    }
+    dados.forEach(function (d) { pos(d, 0); });           // começa separado
+    btnFundir.addEventListener('click', tocar);
+    btnFrio.addEventListener('click', function () {
+      btnFrio.setAttribute('aria-pressed', btnFrio.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+      tocar();
+    });
+    /* Toca sozinho a primeira vez que o bloco aparece */
+    var io = C.quandoVisivel(bloco, function (v) { if (v) { tocar(); if (io) io.disconnect(); } }, '-15% 0px');
+  })();
+
   /* ============ 4. Membrana viva ============ */
   (function membranaViva() {
     var canvas = C.qs('#canvas-membrana');
@@ -405,7 +480,7 @@
     var cores = {}, t = 0, ultimo = performance.now(), rodando = false, visivel = false, textoAnterior = '';
 
     function lerCores() {
-      cores = { cabeca: C.cor('ciano'), cauda: C.cor('ambar'), prot: C.cor('violeta'), col: C.cor('coral'), fundo: C.cor('fundo-2'), acucar: C.cor('lima') };
+      cores = { cabeca: C.cor('ciano'), cauda: C.cor('ambar'), prot: C.cor('violeta'), col: C.cor('coral'), fundo: C.cor('fundo-2'), acucar: C.cor('lima'), marca: C.cor('rosa') };
     }
     function medir() {
       var nd = C.pixelRatio(), nw = canvas.clientWidth, nh = canvas.clientHeight;
@@ -424,7 +499,52 @@
         { x: W * 0.86, w: Math.max(30, W * 0.045), v: 12, canal: false }
       ];
       lipidios.passo = passo;
+      /* Fosfolipídios "marcados": passeiam livremente para os lados (difusão
+         lateral), sempre na mesma camada. Quanto maior a fluidez, mais longe vão. */
+      marcados = [0.12, 0.4, 0.7, 0.95].map(function (fr, k) {
+        return { x: W * fr, cima: k % 2 === 0, rastro: [] };
+      });
       return true;
+    }
+    var marcados = [];
+    function moverMarcados(f, meio, T, mov) {
+      var passoMax = 0.4 + f * 3.2;
+      marcados.forEach(function (m) {
+        if (mov) {
+          var nx = m.x + (Math.random() + Math.random() - 1) * passoMax;   // passo aleatório (vaivém)
+          var dentro = function (x) { return proteinas.some(function (p) { return Math.abs(x - p.x) < p.w / 2 + 4; }); };
+          var bloqueado = dentro(nx) && !dentro(m.x);   // se uma proteína chegou em cima, deixa sair
+          if (!bloqueado) m.x = nx;                                          // não atravessa as proteínas
+          if (m.x < 0) m.x += W; if (m.x > W) m.x -= W;
+        }
+        var s = m.cima ? -1 : 1;
+        m.hy = meio + onda(m.x, f) + s * T;
+        if (mov) {
+          m.rastro.push(m.x);
+          if (m.rastro.length > 90) m.rastro.shift();
+        }
+      });
+    }
+    function desenharMarcados(f, meio, T, rCab) {
+      ctx.strokeStyle = cores.marca; ctx.fillStyle = cores.marca;
+      marcados.forEach(function (m) {
+        var s = m.cima ? -1 : 1;
+        /* rastro: por onde a molécula passou recentemente */
+        if (m.rastro.length > 1) {
+          ctx.lineWidth = 2; ctx.globalAlpha = 0.35;
+          ctx.beginPath();
+          for (var k = 0; k < m.rastro.length; k += 2) {
+            var rx = m.rastro[k], ry = meio + onda(rx, f) + s * (T + rCab + 5);
+            if (k === 0 || Math.abs(rx - m.rastro[k - 2]) > W / 2) ctx.moveTo(rx, ry); else ctx.lineTo(rx, ry);
+          }
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+        ctx.beginPath(); ctx.arc(m.x, m.hy, rCab + 1.5, 0, 6.2832); ctx.fill();
+        ctx.lineWidth = 2; ctx.globalAlpha = 0.5;
+        ctx.beginPath(); ctx.arc(m.x, m.hy, rCab + 5, 0, 6.2832); ctx.stroke();
+        ctx.globalAlpha = 1;
+      });
     }
     function fluidez() {
       var T = temp.value / 100;
@@ -500,6 +620,8 @@
       ctx.globalAlpha = 1;
       ctx.fillStyle = cores.cabeca; ctx.fill(cabecas);
       if (comCol) { ctx.fillStyle = cores.col; ctx.fill(colest); }
+      moverMarcados(f, meio, T, mov);
+      desenharMarcados(f, meio, T, rCab);
       /* proteínas que deslizam para os lados (o "mosaico") */
       for (var j = 0; j < proteinas.length; j++) {
         var p = proteinas[j];

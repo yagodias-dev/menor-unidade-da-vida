@@ -565,6 +565,9 @@ input[type="range"] { width: 100%; accent-color: var(--lima); height: 32px; curs
 .analogia { grid-template-columns: 110px 1fr; }
 .experimento h4, .analogia h4 { font-size: 1.2rem; color: var(--ambar); }
 .experimento p { margin: 0; }
+.ex-controles { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .9rem; }
+.experimento .ex-status { margin-top: .6rem; min-height: 1.5em; font-family: var(--fonte-mono); font-size: .85rem; font-weight: 700; color: var(--lima); }
+.experimento .ex-aviso { margin-top: .2rem; font-size: .8rem; color: var(--texto-2); }
 .analogia ul { margin: 0; padding-left: 1.1rem; display: grid; gap: .4rem; }
 .ex-a circle:first-child, .ex-b ellipse { fill: color-mix(in srgb, var(--ciano) 10%, transparent); stroke: var(--ciano); stroke-width: 2.5; }
 .ex-p1 { fill: var(--coral); }

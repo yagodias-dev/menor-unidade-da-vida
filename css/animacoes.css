@@ -73,9 +73,42 @@
 .ilustracao [data-parte].ativa:not(use) { animation: parte-pulo .6s var(--ease-mola); transform-box: fill-box; transform-origin: center; }
 @keyframes parte-pulo { 40% { transform: scale(1.06); } }
 
-/* Painel abre como uma célula se expandindo */
-.painel.abrindo { animation: painel-abre .55s var(--ease-mola); transform-origin: var(--ox, 90%) var(--oy, 90%); }
-@keyframes painel-abre { from { opacity: 0; transform: scale(.4); border-radius: 50%; } }
+/* Painel "brota" do ponto exato que foi tocado: um círculo que cresce a partir dali */
+.painel.abrindo { animation: painel-abre .6s var(--ease); transform-origin: var(--ox, 90%) var(--oy, 90%); }
+@keyframes painel-abre {
+  from { clip-path: circle(0 at var(--ox, 90%) var(--oy, 90%)); transform: scale(.92); }
+  to { clip-path: circle(150% at var(--ox, 90%) var(--oy, 90%)); transform: none; }
+}
+
+/* Linha do tempo: ao aparecer, cada marcador "se divide" e a célula-filha desce
+   pela linha até o próximo marco — "toda célula vem de outra célula" */
+.linha-tempo li::after {
+  content: ''; position: absolute; left: -1.85rem; top: .3rem; width: 1.15rem; height: 1.15rem; border-radius: 50%;
+  border: 3px solid var(--violeta); background: var(--fundo-2); opacity: 0; pointer-events: none;
+}
+.linha-tempo li:not(:last-child).visivel::after { animation: filha-desce 1.8s var(--ease) forwards; animation-delay: calc(var(--d, 0) * 90ms + .35s); }
+.linha-tempo li.visivel::before { animation: estrangula .9s var(--ease-mola); animation-delay: calc(var(--d, 0) * 90ms + .2s); }
+@keyframes estrangula { 35% { transform: scaleX(1.35) scaleY(.8); } 60% { transform: scaleX(.9) scaleY(1.1); } }
+@keyframes filha-desce {
+  0% { opacity: 0; transform: none; }
+  15% { opacity: 1; transform: translateY(.3rem) scale(.95); }
+  100% { opacity: 0; transform: translateY(4.2rem) scale(.55); }
+}
+
+/* Viagem: o anel tracejado gira como o botão de foco do microscópio, conforme o zoom */
+.viagem-lente::before { rotate: calc(var(--vj, 0) * 72deg); }
+.viagem-lente::after {
+  content: ''; position: absolute; inset: -22px; border-radius: 50%; pointer-events: none;
+  background: repeating-conic-gradient(color-mix(in srgb, var(--ciano) 55%, transparent) 0 1deg, transparent 1deg 6deg);
+  /* closest-side: 100% = borda da caixa, então sobra só um anel fino de tracinhos por fora da lente */
+  -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 8px), #000 calc(100% - 7px), #000 calc(100% - 1px), transparent 100%);
+          mask: radial-gradient(closest-side, transparent calc(100% - 8px), #000 calc(100% - 7px), #000 calc(100% - 1px), transparent 100%);
+  rotate: calc(var(--vj, 0) * -120deg); opacity: .7;
+}
+/* A mira "trava" no alvo um instante antes de cada mergulho */
+.escala.travando .vj-alvo { animation: trava .45s var(--ease-mola) forwards; }
+@keyframes trava { 0% { transform: scale(1.6); opacity: .3; } 100% { transform: scale(1); opacity: 1; stroke-width: 5; } }
+.viagem.travando .viagem-lente { box-shadow: inset 0 0 70px color-mix(in srgb, var(--lima) 22%, transparent); border-color: color-mix(in srgb, var(--lima) 60%, transparent); transition: box-shadow .3s, border-color .3s; }
 
 /* Íons descendo pelo canal da membrana */
 .f-canal .ion { animation: ion-desce 3.6s linear infinite; }

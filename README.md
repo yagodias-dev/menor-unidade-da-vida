@@ -70,10 +70,21 @@ Todos os caminhos do site são relativos (`css/...`, `js/...`), então ele funci
 ## Acessibilidade e desempenho
 
 - Botão de **animações** no topo: desliga partículas, cursor personalizado e efeitos pesados (a escolha fica salva).
-- `prefers-reduced-motion` é respeitado: o site mostra versões estáticas da abertura e da viagem de escala.
-- Modo **claro/escuro** (a escolha fica salva).
-- Ilustrações com `title`/`desc`, legenda clicável por teclado e painel de informações que devolve o foco ao fechar (tecla Esc).
-- Canvas com pixel ratio máximo de 1,5 e animações pausadas fora da tela; menos partículas em aparelhos fracos.
+- `prefers-reduced-motion` é respeitado: o site mostra versões estáticas da abertura, da viagem de escala e do experimento de Frye e Edidin.
+- Modo **claro/escuro**: sem escolha salva, segue o modo do sistema; a escolha manual fica salva. Cores do modo claro com contraste mínimo de 4,5:1.
+- Ilustrações com `title`/`desc`, legenda clicável por teclado (com a etiqueta "exclusiva" no modo destacar) e painel de informações que devolve o foco ao fechar (Esc, botão × ou toque fora).
+- Membrana viva: slider com `aria-valuetext` (fria / morna / quente) e botão **Cutucar a membrana** para quem usa teclado.
+- Canvas com pixel ratio máximo de 1,5 (1 em aparelhos fracos), animações pausadas fora da tela e desenho em lotes. Se o aparelho tiver muitos quadros lentos, a abertura corta as partículas pela metade sozinha.
+- Em aparelhos fracos, sem `blur` e sem `backdrop-filter`. A viagem de escala só recalcula quando a página rola.
+
+## Animações e o que elas mostram
+
+- **Abertura:** partículas formam uma célula; tocar nela manda uma onda do centro até a membrana. Ao rolar, mergulho no núcleo.
+- **Viagem de escala:** a mira "trava" no alvo antes de cada zoom e o anel da lente gira como o botão de foco de um microscópio.
+- **Linha do tempo:** cada marcador se divide e a célula-filha desce até o próximo marco ("toda célula vem de outra célula").
+- **Membrana viva:** fosfolipídios cor-de-rosa "marcados" deixam um rastro ao passear para os lados (difusão lateral), sempre na mesma camada; quanto maior a fluidez, mais longe vão.
+- **Experimento de Frye e Edidin:** as proteínas marcadas deslizam pela membrana até se misturarem; o botão **No frio** deixa a mistura bem mais lenta. O tempo da animação é ilustrativo.
+- **Painel de informações:** brota do ponto exato que foi tocado.
 
 ## Paleta de cores
 
