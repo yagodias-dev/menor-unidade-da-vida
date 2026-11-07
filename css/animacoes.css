@@ -113,6 +113,23 @@ html.cursor-molecula input[type="range"] { cursor: none !important; }
 .cursor-mol.sobre .a0 { width: 30px; height: 30px; background: transparent; border: 2px solid var(--lima); }
 .cursor-mol.oculto { opacity: 0; }
 
+/* ---------- Aparelhos fracos e telas de toque: sem desfoques caros ----------
+   blur() e backdrop-filter obrigam o celular a repintar áreas grandes a cada
+   quadro. Aqui eles viram versões simples (só opacidade e movimento). */
+html.efeitos-leves.js [data-revelar="foco"]:not(.visivel) { filter: none; }
+html.efeitos-leves.js .hero-titulo[data-letras] .letra { filter: none; }
+html.efeitos-leves .hero-conteudo { filter: none; }
+html.efeitos-leves .visor-painel.entrando .ilustracao { animation-name: celula-entra-leve; }
+@keyframes celula-entra-leve { from { opacity: 0; transform: scale(.92); } }
+html.efeitos-leves .topo, html.efeitos-leves .painel, html.efeitos-leves .menu {
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+html.efeitos-leves .topo { background: color-mix(in srgb, var(--fundo) 96%, transparent); }
+html.efeitos-leves .painel { background: var(--fundo-2); }
+@media (pointer: coarse) {
+  .hero-conteudo { filter: none; }      /* o desfoque da saída do hero pesa muito ao rolar com o dedo */
+}
+
 /* ---------- Movimento reduzido / animações desligadas ---------- */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -141,5 +158,5 @@ html.estatico .viagem-lente { display: none; }
 html.estatico .viagem-recorte { position: static; clip-path: none; border-radius: 0; overflow: visible; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
 html.estatico .escala { position: relative; inset: auto; opacity: 1 !important; transform: none !important; aspect-ratio: 1; border-radius: 50%; background: var(--fundo); border: 1px solid var(--borda); overflow: hidden; }
 html.estatico .viagem-legendas { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); width: 100%; max-width: 1100px; margin-top: 1rem; }
-html.estatico .viagem-legendas li { position: static; opacity: 1; transform: none; }
+html.estatico .viagem-legendas li { position: static; grid-area: auto; opacity: 1; transform: none; }
 html.estatico .viagem-regua, html.estatico .viagem-dica { display: none; }

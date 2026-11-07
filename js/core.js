@@ -19,7 +19,7 @@
   C.qsa = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
   C.limitar = function (v, a, b) { return Math.max(a, Math.min(b, v)); };
   C.suave = function (a, b, x) { var t = C.limitar((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
-  C.pixelRatio = function () { return Math.min(window.devicePixelRatio || 1, 1.5); };
+  C.pixelRatio = function () { return Math.min(window.devicePixelRatio || 1, C.aparelhoFraco ? 1 : 1.5); };
   C.armazenar = {
     ler: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
     gravar: function (k, v) { try { localStorage.setItem(k, v); } catch (e) { /* modo privado */ } }

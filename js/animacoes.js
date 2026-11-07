@@ -49,6 +49,7 @@
     var mouse = { x: -9999, y: -9999 };
     var inicio = performance.now();
     var visivel = true, rodando = false, mergulho = 0;
+    var toqueOnda = { t: -99 };   // momento (s) do último toque na célula
     var NUCLEO = { x: -0.12, y: -0.04 };
 
     function lerCores() {
@@ -64,6 +65,7 @@
       fundo = C.cor('fundo') || '#03161b';
       escuro = document.documentElement.getAttribute('data-tema') !== 'claro';
       parts.forEach(function (p) { var lista = cores[p.g]; p.cor = lista[p.k % lista.length]; });
+      montarLotes();
     }
 
     /* Alvos em coordenadas da célula (raio = 1); depois escalados para a tela */
@@ -124,7 +126,10 @@
           x: Math.random() * W, y: Math.random() * H, vx: 0, vy: 0,
           atraso: ordem[a.g] + Math.random() * 0.75,
           tam: a.g === 'cito' ? 1.6 : (a.g === 'membrana' ? 2.6 : 2.2),
-          fase: Math.random() * Math.PI * 2
+          fase: Math.random() * Math.PI * 2,
+          ang3: Math.atan2(a.oy, a.ox) * 3,              // pré-calculado (antes era feito a cada quadro)
+          dist: Math.hypot(a.ox, a.oy),
+          nuc: a.g === 'nucleo' || a.g === 'nucleolo'
         };
       });
       lerCores();
@@ -143,12 +148,17 @@
       return true;
     }
 
-    function alvoDe(p, t) {
-      /* a célula "respira": a membrana ondula devagar */
-      var resp = 1;
-      if (p.g === 'membrana') resp = 1 + 0.012 * Math.sin(t * 1.3 + Math.atan2(p.oy, p.ox) * 3);
-      else if (p.g === 'nucleo' || p.g === 'nucleolo') resp = 1 + 0.008 * Math.sin(t * 0.9);
-      return { x: cx + p.ox * R * resp, y: cy + p.oy * R * resp };
+    /* Desempenho: as partículas são agrupadas por cor/transparência ("lotes").
+       Assim a cor do pincel muda ~10 vezes por quadro, e não 1.700 vezes. */
+    var lotes = [];
+    function montarLotes() {
+      var mapa = {};
+      lotes = [];
+      parts.forEach(function (p) {
+        var chave = p.cor + '|' + (p.g === 'cito' ? 1 : 0);
+        if (!mapa[chave]) { mapa[chave] = { cor: p.cor, alfa: p.g === 'cito' ? 0.55 : 0.95, itens: [] }; lotes.push(mapa[chave]); }
+        mapa[chave].itens.push(p);
+      });
     }
 
     function quadro(agora) {
@@ -166,39 +176,68 @@
       var z = 1 + m * m * 16;
       var fx = cx + NUCLEO.x * R, fy = cy + NUCLEO.y * R;
       var sx = fx + (W / 2 - fx) * Math.min(1, m * 1.6), sy = fy + (H / 2 - fy) * Math.min(1, m * 1.6);
-      var raioMouse = 90;
+      var raioMouse = 90, rm2 = raioMouse * raioMouse;
+      /* a célula "respira": a membrana ondula devagar e o núcleo pulsa de leve */
+      var respNuc = 1 + 0.008 * Math.sin(t * 0.9), t13 = t * 1.3;
+      /* onda criada por um toque/clique na célula (anel que se espalha) */
+      var ondaIdade = t - toqueOnda.t, ondaViva = !estatico && ondaIdade >= 0 && ondaIdade < 1.6;
+      var ondaR = ondaIdade * 1.6, ondaForca = 0.06 * (1 - ondaIdade / 1.6);
 
-      for (var i = 0; i < parts.length; i++) {
-        var p = parts[i];
-        var a = alvoDe(p, t);
-        if (estatico) { p.x = a.x; p.y = a.y; }
-        else if (t > p.atraso) {
-          var dx = a.x - p.x, dy = a.y - p.y;
-          p.vx += dx * 0.045; p.vy += dy * 0.045;
-          var mx = p.x - mouse.x, my = p.y - mouse.y, d2 = mx * mx + my * my;
-          if (d2 < raioMouse * raioMouse) {               // o mouse empurra as partículas
-            var d = Math.sqrt(d2) || 1, f = (1 - d / raioMouse) * 2.6;
-            p.vx += mx / d * f; p.vy += my / d * f;
+      for (var b = 0; b < lotes.length; b++) {
+        var lote = lotes[b], itens = lote.itens;
+        ctx.fillStyle = lote.cor;
+        ctx.globalAlpha = lote.alfa * (1 - m * 0.5);
+        for (var i = 0; i < itens.length; i++) {
+          var p = itens[i];
+          var resp = p.g === 'membrana' ? 1 + 0.012 * Math.sin(t13 + p.ang3) : (p.nuc ? respNuc : 1);
+          if (ondaViva) {
+            var dr = p.dist - ondaR;
+            if (dr > -0.25 && dr < 0.25) resp += ondaForca * Math.cos(dr * 6.28);
           }
-          p.vx *= 0.82; p.vy *= 0.82;
-          p.x += p.vx; p.y += p.vy;
-        } else {
-          p.x += Math.sin(t * 2 + p.fase) * 0.4;
-          p.y += Math.cos(t * 1.7 + p.fase) * 0.4;
+          var ax = cx + p.ox * R * resp, ay = cy + p.oy * R * resp;
+          if (estatico) { p.x = ax; p.y = ay; }
+          else if (t > p.atraso) {
+            p.vx += (ax - p.x) * 0.045; p.vy += (ay - p.y) * 0.045;
+            var mx = p.x - mouse.x, my = p.y - mouse.y, d2 = mx * mx + my * my;
+            if (d2 < rm2) {                                   // o mouse empurra as partículas
+              var d = Math.sqrt(d2) || 1, f = (1 - d / raioMouse) * 2.6;
+              p.vx += mx / d * f; p.vy += my / d * f;
+            }
+            p.vx *= 0.82; p.vy *= 0.82;
+            p.x += p.vx; p.y += p.vy;
+          } else {
+            p.x += Math.sin(t * 2 + p.fase) * 0.4;
+            p.y += Math.cos(t * 1.7 + p.fase) * 0.4;
+          }
+          var X = sx + (p.x - fx) * z, Y = sy + (p.y - fy) * z;
+          if (X < -10 || Y < -10 || X > W + 10 || Y > H + 10) continue;
+          var s = p.tam * (1 + m * 4);
+          ctx.fillRect(X - s / 2, Y - s / 2, s, s);
         }
-        var X = sx + (p.x - fx) * z, Y = sy + (p.y - fy) * z;
-        if (X < -10 || Y < -10 || X > W + 10 || Y > H + 10) continue;
-        var s = p.tam * (1 + m * 4);
-        ctx.fillStyle = p.cor;
-        ctx.globalAlpha = (p.g === 'cito' ? 0.55 : 0.95) * (1 - m * 0.5);
-        ctx.fillRect(X - s / 2, Y - s / 2, s, s);
       }
       ctx.globalAlpha = 1;
     }
 
+    /* Se o aparelho não aguentar (muitos quadros lentos), corta as partículas pela metade */
+    var amostra = { n: 0, lentos: 0, ultimo: 0, cortes: 0 };
+    function vigiarDesempenho(agora) {
+      var dt = agora - amostra.ultimo; amostra.ultimo = agora;
+      if (amostra.cortes >= 2 || dt <= 0 || dt > 120) return;   // >120 ms: aba trocada, não conta
+      amostra.n++; if (dt > 24) amostra.lentos++;
+      if (amostra.n < 90) return;
+      if (amostra.lentos > amostra.n * 0.5) {
+        parts = parts.filter(function (p, k) { return k % 2 === 0; });
+        montarLotes();
+        amostra.cortes++;
+      }
+      amostra.n = 0; amostra.lentos = 0;
+    }
+
     function laco(agora) {
       if (!rodando) return;
-      quadro(agora);
+      /* Quando o "portal" já cobre a tela inteira, não há o que desenhar */
+      if (mergulho < 0.97) { quadro(agora); vigiarDesempenho(agora); }
+      else amostra.ultimo = agora;
       requestAnimationFrame(laco);
     }
     function ligar() {
@@ -284,7 +323,19 @@
     var itensLeg = C.qsa('li', legendas), itensReg = C.qsa('li', regua);
     var focos = camadas.map(function (c) { return c.getAttribute('data-foco').split(' ').map(Number); });
 
-    var ultimoAtivo = -1, rodando = false, visivel = false;
+    var ultimoAtivo = -1, visivel = false, ultimoProg = -1;
+    /* Medidas guardadas: ler offsetTop a cada quadro forçava o navegador a recalcular o layout */
+    var med = { inicio: 0, curso: 1 };
+    function medirViagem() {
+      med.inicio = secao.offsetTop;
+      med.curso = Math.max(1, secao.offsetHeight - window.innerHeight);
+      ultimoProg = -1;
+    }
+    medirViagem();
+    window.addEventListener('resize', function () { medirViagem(); pedir(); });
+    window.addEventListener('load', function () { medirViagem(); pedir(); });
+    if ('ResizeObserver' in window) new ResizeObserver(function () { medirViagem(); pedir(); }).observe(document.body);
+
     function atualizar() {
       if (C.movimentoReduzido()) {
         /* Versão estática: limpa tudo o que a rolagem escreveu (inclusive visibility) */
@@ -293,8 +344,9 @@
         ultimoAtivo = -1;
         return;
       }
-      var inicio = secao.offsetTop, curso = secao.offsetHeight - window.innerHeight;
-      var prog = C.limitar((window.scrollY - inicio) / curso, 0, 1);
+      var prog = C.limitar((window.scrollY - med.inicio) / med.curso, 0, 1);
+      if (prog === ultimoProg) return;      // nada mudou desde o último quadro
+      ultimoProg = prog;
       var rr = prog * 5, i = Math.min(4, Math.floor(rr)), u = rr - i;
       var t = i < 4 ? i + C.suave(0.35, 1, u) : 4;
       camadas.forEach(function (c, n) {
@@ -323,13 +375,16 @@
         itensReg.forEach(function (li, k) { li.classList.toggle('ativa', k === ativo); });
       }
     }
-    function laco() { if (!rodando) return; atualizar(); requestAnimationFrame(laco); }
-    C.quandoVisivel(secao, function (v) {
-      visivel = v;
-      if (v && !rodando) { rodando = true; requestAnimationFrame(laco); }
-      if (!v) rodando = false;
-    }, '50px');
-    C.ouvir('efeitos', atualizar);
+    /* Só recalcula quando a página rola (antes rodava a cada quadro, mesmo parada) */
+    var pedido = false;
+    function pedir() {
+      if (pedido || !visivel) return;
+      pedido = true;
+      requestAnimationFrame(function () { pedido = false; atualizar(); });
+    }
+    window.addEventListener('scroll', pedir, { passive: true });
+    C.quandoVisivel(secao, function (v) { visivel = v; pedir(); }, '50px');
+    C.ouvir('efeitos', function () { ultimoProg = -1; atualizar(); });
     atualizar();
   })();
 
@@ -407,30 +462,35 @@
         for (var i = 0; i < proteinas.length; i++) if (Math.abs(x - proteinas[i].x) < proteinas[i].w / 2 + 3) return true;
         return false;
       }
-      ctx.lineCap = 'round';
+      /* Desempenho: todas as caudas viram UM caminho, todas as cabeças outro e
+         todo o colesterol um terceiro (antes eram ~300 desenhos separados por quadro) */
+      var caudas = new Path2D(), cabecas = new Path2D(), colest = new Path2D();
+      var mov = !C.movimentoReduzido(), comCol = col.checked;
       for (var i = 0; i < lipidios.length; i++) {
         var l = lipidios[i];
-        if (!C.movimentoReduzido()) { l.dx += (Math.random() - 0.5) * f * 1.1; l.dx *= 0.95; }
+        if (mov) { l.dx += (Math.random() - 0.5) * f * 1.1; l.dx *= 0.95; }
         var x = l.bx + l.dx;
+        l.vis = false;
         if (sobProteina(x)) continue;
         var w = onda(x, f);
         var s = l.cima ? -1 : 1;
-        var hy = meio + w + s * T, fimY = meio + w + s * 3;
+        var hy = meio + w + s * T, fimY = meio + w + s * 3, my = (hy + fimY) / 2;
         var mexe = Math.sin(t * (2 + f * 5) + l.fase) * (1 + f * 4);
-        ctx.strokeStyle = cores.cauda; ctx.lineWidth = 1.6; ctx.globalAlpha = 0.85;
-        ctx.beginPath();
-        ctx.moveTo(x - 2, hy); ctx.quadraticCurveTo(x - 2 + mexe, (hy + fimY) / 2, x - 2 + mexe * 0.3, fimY);
-        ctx.moveTo(x + 2, hy); ctx.quadraticCurveTo(x + 2 - mexe * 0.7, (hy + fimY) / 2, x + 2 + mexe * 0.6, fimY);
-        ctx.stroke();
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = cores.cabeca;
-        ctx.beginPath(); ctx.arc(x, hy, rCab, 0, Math.PI * 2); ctx.fill();
-        if (col.checked && i % 7 === 3) {               // colesterol encaixado
-          ctx.fillStyle = cores.col;
+        caudas.moveTo(x - 2, hy); caudas.quadraticCurveTo(x - 2 + mexe, my, x - 2 + mexe * 0.3, fimY);
+        caudas.moveTo(x + 2, hy); caudas.quadraticCurveTo(x + 2 - mexe * 0.7, my, x + 2 + mexe * 0.6, fimY);
+        cabecas.moveTo(x + rCab, hy); cabecas.arc(x, hy, rCab, 0, 6.2832);
+        l.vis = true; l.x = x; l.hy = hy;              // usados pelos fosfolipídios marcados
+        if (comCol && i % 7 === 3) {                    // colesterol encaixado
           var cy0 = meio + w + s * (T - rCab - 2);
-          ctx.fillRect(x + lipidios.passo / 4 - 2.5, Math.min(cy0, cy0 - s * T * 0.55), 5, T * 0.55);
+          colest.rect(x + lipidios.passo / 4 - 2.5, Math.min(cy0, cy0 - s * T * 0.55), 5, T * 0.55);
         }
       }
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = cores.cauda; ctx.lineWidth = 1.6; ctx.globalAlpha = 0.85;
+      ctx.stroke(caudas);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = cores.cabeca; ctx.fill(cabecas);
+      if (comCol) { ctx.fillStyle = cores.col; ctx.fill(colest); }
       /* proteínas que deslizam para os lados (o "mosaico") */
       for (var j = 0; j < proteinas.length; j++) {
         var p = proteinas[j];
