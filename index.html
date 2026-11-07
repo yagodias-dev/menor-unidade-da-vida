@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="pt-BR" data-tema="escuro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dentro da menor unidade da vida — Membrana, células e tecidos</title>
+  <meta name="description" content="Site educativo e interativo sobre membrana plasmática, tipos de célula e tecidos do corpo humano, em português, para o ensino médio e o início da faculdade.">
+  <meta name="theme-color" content="#03161b">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cellipse cx='32' cy='32' rx='28' ry='24' fill='%2303161b' stroke='%235fe3ea' stroke-width='4'/%3E%3Ccircle cx='28' cy='30' r='9' fill='%23b9a2ff'/%3E%3Cellipse cx='44' cy='40' rx='7' ry='4' fill='%23ff8370'/%3E%3C/svg%3E">
+
+  <!-- Tema e preferências aplicados antes de pintar a tela (evita "piscar") -->
+  <script>
+    (function () {
+      var d = document.documentElement;
+      d.classList.add('js');
+      try {
+        var t = localStorage.getItem('tema');
+        if (t === 'claro' || t === 'escuro') d.setAttribute('data-tema', t);
+        if (localStorage.getItem('efeitos') === 'off') d.classList.add('sem-efeitos');
+      } catch (e) {}
+    })();
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/animacoes.css">
+</head>
+<body>
+  <a class="pular" href="#conteudo">Pular para o conteúdo</a>
+
+  <!-- Definições gráficas compartilhadas por todas as ilustrações -->
+  <svg class="defs-globais" width="0" height="0" aria-hidden="true" focusable="false">
+    <defs>
+      <radialGradient id="g-cito" cx="45%" cy="40%" r="70%">
+        <stop offset="0" style="stop-color:var(--lima);stop-opacity:.16"/>
+        <stop offset=".7" style="stop-color:var(--ciano);stop-opacity:.07"/>
+        <stop offset="1" style="stop-color:var(--ciano);stop-opacity:.16"/>
+      </radialGradient>
+      <radialGradient id="g-nucleo" cx="40%" cy="35%" r="70%">
+        <stop offset="0" style="stop-color:var(--violeta);stop-opacity:.55"/>
+        <stop offset="1" style="stop-color:var(--violeta);stop-opacity:.22"/>
+      </radialGradient>
+      <radialGradient id="g-vacuolo" cx="40%" cy="40%" r="70%">
+        <stop offset="0" style="stop-color:var(--ciano);stop-opacity:.10"/>
+        <stop offset="1" style="stop-color:var(--ciano);stop-opacity:.28"/>
+      </radialGradient>
+      <filter id="f-brilho" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="3" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <filter id="f-goo" x="-20%" y="-40%" width="140%" height="180%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="2.2" result="b"/>
+        <feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9"/>
+      </filter>
+      <!-- Um fosfolipídio: cabeça + duas caudas (uma com dobra = insaturada) -->
+      <g id="fosfo">
+        <path class="cauda" d="M-3,6 C-6,14 0,20 -3,27 C-6,33 -2,38 -3,42"/>
+        <path class="cauda" d="M3,6 C5,13 2,18 4,24 L9,30 C11,35 7,39 8,42"/>
+        <circle class="cabeca" r="8"/>
+      </g>
+    </defs>
+  </svg>
+
+  <!-- Cabeçalho fixo com menu e progresso de leitura em forma de mitose -->
+  <header class="topo" id="topo">
+    <div class="topo-interno">
+      <a class="marca" href="#inicio" aria-label="Início: Dentro da menor unidade da vida">
+        <svg class="marca-icone" viewBox="0 0 40 40" aria-hidden="true"><ellipse cx="20" cy="20" rx="17" ry="14"/><circle cx="17" cy="19" r="5.5"/><ellipse cx="28" cy="25" rx="4" ry="2.2"/></svg>
+        <span class="marca-texto">Menor<b>Unidade</b></span>
+      </a>
+
+      <nav class="menu" id="menu" aria-label="Seções do site">
+        <ul class="menu-lista" id="menu-lista"></ul>
+        <span class="menu-indicador" aria-hidden="true"></span>
+      </nav>
+
+      <div class="topo-acoes">
+        <button class="menu-botao" id="menu-botao" type="button" aria-expanded="false" aria-controls="menu">
+          <span class="menu-botao-icone" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="menu-botao-texto">Menu <small id="menu-atual"></small></span>
+        </button>
+        <button class="icone-botao" id="btn-efeitos" type="button" aria-pressed="true" title="Ligar ou desligar animações pesadas">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12c2.5-6 5-6 7.5 0s5 6 7.5 0 3.5-4 5-3"/><circle cx="20" cy="5" r="1.6"/></svg>
+          <span class="sr">Animações</span>
+        </button>
+        <button class="icone-botao" id="btn-tema" type="button" aria-pressed="false" title="Alternar modo claro e escuro">
+          <svg class="ic-lua" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg>
+          <svg class="ic-sol" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1"/></svg>
+          <span class="sr">Modo claro ou escuro</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="leitura" id="leitura" role="progressbar" aria-label="Progresso de leitura" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div class="leitura-trilha"><div class="leitura-barra"></div></div>
+      <svg class="leitura-celula" viewBox="0 0 60 30" aria-hidden="true">
+        <g filter="url(#f-goo)">
+          <circle class="lc-a" cx="30" cy="15" r="9"/>
+          <circle class="lc-b" cx="30" cy="15" r="9"/>
+        </g>
+        <circle class="lc-nucleo" cx="30" cy="15" r="4"/>
+        <g class="lc-cromo">
+          <rect class="lc-c1" x="28.6" y="9" width="2.8" height="5" rx="1.4"/>
+          <rect class="lc-c2" x="28.6" y="16" width="2.8" height="5" rx="1.4"/>
+          <rect class="lc-c3" x="28.6" y="9" width="2.8" height="5" rx="1.4"/>
+          <rect class="lc-c4" x="28.6" y="16" width="2.8" height="5" rx="1.4"/>
+        </g>
+      </svg>
+    </div>
+  </header>
+
+  <main id="conteudo" tabindex="-1">
+
+    <!-- ===================== 1. HERO ===================== -->
+    <section id="inicio" class="hero" aria-labelledby="titulo-hero" data-nav="Início">
+      <div class="hero-palco">
+        <canvas id="canvas-abertura" class="hero-canvas" aria-hidden="true"></canvas>
+        <div class="hero-reticulo" aria-hidden="true"><i></i></div>
+        <div class="hero-conteudo">
+          <p class="hero-kicker"><span class="pulso" aria-hidden="true"></span> <span class="so-largo">Biologia celular e histologia · </span>Guia interativo</p>
+          <h1 id="titulo-hero" class="hero-titulo" data-letras>Dentro da menor unidade da vida</h1>
+          <p class="hero-sub">Membrana plasmática, tipos de célula e tecidos do corpo explicados de um jeito simples, com ilustrações, animações e simuladores.</p>
+          <div class="hero-acoes">
+            <a class="botao botao-primario" href="#viagem"><span>Começar a viagem</span></a>
+            <a class="botao botao-fantasma" href="#membrana"><span>Ir direto para a membrana</span></a>
+          </div>
+        </div>
+        <div class="hero-rolar" aria-hidden="true"><span>Role para mergulhar</span><i></i></div>
+        <div class="hero-portal" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <!-- ===================== VIAGEM DE ESCALA ===================== -->
+    <section id="viagem" class="viagem" aria-labelledby="titulo-viagem" data-nav="Viagem">
+      <div class="viagem-palco">
+        <header class="viagem-cabeca">
+          <p class="kicker">Viagem de escala</p>
+          <h2 id="titulo-viagem">Do corpo à molécula</h2>
+          <p class="viagem-dica">Role a página: cada passo é um zoom para dentro.</p>
+        </header>
+
+        <div class="viagem-janela">
+          <div class="viagem-lente" aria-hidden="true"></div>
+          <div class="viagem-recorte">
+
+          <figure class="escala" data-i="0" data-foco="62.5 57.5">
+            <svg viewBox="0 0 400 400" role="img" aria-label="Silhueta de um corpo humano">
+              <circle class="vj-halo" cx="200" cy="215" r="170"/>
+              <circle class="vj-corpo" cx="200" cy="70" r="34"/>
+              <path class="vj-corpo" d="M200,110 C170,110 150,125 148,160 L140,250 C139,262 150,266 156,256 L168,190 L170,270 L160,370 C158,384 178,388 182,374 L198,290 L202,290 L218,374 C222,388 242,384 240,370 L230,270 L232,190 L244,256 C250,266 261,262 260,250 L252,160 C250,125 230,110 200,110 Z"/>
+              <circle class="vj-alvo" cx="250" cy="230" r="9"/>
+            </svg>
+          </figure>
+
+          <figure class="escala" data-i="1" data-foco="50 50">
+            <svg viewBox="0 0 400 400" role="img" aria-label="Tecido: várias células encostadas umas nas outras" data-gerar="tecido"></svg>
+          </figure>
+
+          <figure class="escala" data-i="2" data-foco="90 50">
+            <svg viewBox="0 0 400 400" role="img" aria-label="Uma célula com núcleo e organelas">
+              <path class="vj-cito" d="M200,40 C290,40 360,100 362,200 C364,300 290,362 200,360 C110,358 40,300 40,200 C40,100 110,40 200,40 Z"/>
+              <circle class="vj-nucleo" cx="185" cy="190" r="55"/>
+              <circle class="vj-nucleolo" cx="175" cy="182" r="17"/>
+              <path class="vj-rer" d="M140,250 A80,80 0 0 1 120,150 M128,262 A96,96 0 0 1 104,142"/>
+              <g class="vj-mito"><ellipse cx="270" cy="110" rx="30" ry="14" transform="rotate(25 270 110)"/><ellipse cx="250" cy="300" rx="30" ry="14" transform="rotate(-20 250 300)"/></g>
+              <path class="vj-golgi" d="M268,190 q28,-18 56,0 M272,204 q24,-14 48,0 M276,218 q20,-10 40,0"/>
+              <circle class="vj-alvo" cx="361" cy="200" r="9"/>
+            </svg>
+          </figure>
+
+          <figure class="escala" data-i="3" data-foco="50 42.5">
+            <svg viewBox="0 0 400 400" role="img" aria-label="Trecho da membrana: duas camadas de fosfolipídios com proteínas" data-gerar="bicamada-viagem"></svg>
+          </figure>
+
+          <figure class="escala" data-i="4" data-foco="50 50">
+            <svg viewBox="0 0 400 400" role="img" aria-label="Um fosfolipídio: cabeça com fosfato e duas caudas de ácidos graxos">
+              <circle class="mol-halo" cx="200" cy="200" r="190"/>
+              <circle class="mol-cabeca" cx="200" cy="95" r="44"/>
+              <text class="mol-sigla" x="200" y="104" text-anchor="middle">P</text>
+              <rect class="mol-glicerol" x="166" y="146" width="68" height="28" rx="10"/>
+              <text class="mol-mini" x="200" y="165" text-anchor="middle">glicerol</text>
+              <path class="mol-cauda" d="M186,176 l-10,16 l10,16 l-10,16 l10,16 l-10,16 l10,16 l-10,16 l10,16 l-10,16 l10,16 l-10,16"/>
+              <path class="mol-cauda" d="M214,176 l10,16 l-10,16 l10,16 l-10,16 l10,16 l14,12 l-2,18 l12,14 l-10,16 l10,16"/>
+              <path class="mol-linha" d="M52,104 H150"/>
+              <text class="mol-rotulo" x="52" y="90">Cabeça</text>
+              <text class="mol-sub" x="40" y="128">gosta de água</text>
+              <path class="mol-linha" d="M330,250 H240"/>
+              <text class="mol-rotulo" x="262" y="236">Caudas</text>
+              <text class="mol-sub" x="250" y="276">fogem da água</text>
+            </svg>
+          </figure>
+          </div>
+        </div>
+
+        <ol class="viagem-legendas" id="viagem-legendas"></ol>
+        <ol class="viagem-regua" id="viagem-regua" aria-hidden="true"></ol>
+      </div>
+    </section>
+
+    <!-- ===================== 2. A CÉLULA ===================== -->
+    <section id="celula" class="secao secao-celula" aria-labelledby="titulo-celula" data-nav="A célula">
+      <div class="cortina" aria-hidden="true"><svg viewBox="0 0 1440 80" preserveAspectRatio="none"><path d="M0,80 L0,40 C120,10 240,70 360,40 C480,10 600,70 720,40 C840,10 960,70 1080,40 C1200,10 1320,70 1440,40 L1440,80 Z"/></svg></div>
+      <div class="secao-interna">
+        <header class="secao-cabeca" data-revelar="mascara">
+          <span class="secao-num" aria-hidden="true">02</span>
+          <p class="kicker">Capítulo 2</p>
+          <h2 id="titulo-celula">A célula</h2>
+          <p class="lead">Todo ser vivo é feito de células. Algumas vivem sozinhas, como as bactérias. Outras trabalham em equipe, como as do nosso corpo.</p>
+        </header>
+
+        <aside class="caixa-resumo" data-revelar="foco">
+          <h3>Em resumo</h3>
+          <p>A célula é a menor parte de um ser vivo que consegue se manter viva. Existem dois grandes tipos: <strong>procariontes</strong> (sem núcleo) e <strong>eucariontes</strong> (com núcleo).</p>
+        </aside>
+
+        <!-- 2.1 Teoria celular -->
+        <article class="bloco" aria-labelledby="t-teoria">
+          <h3 id="t-teoria" data-revelar="foco">A teoria celular</h3>
+          <p data-revelar="foco">Pense numa parede de tijolos. A parede é o ser vivo, e cada tijolo é uma célula. A <strong>teoria celular</strong> (a ideia de que a vida é feita de células) foi montada aos poucos, por vários cientistas.</p>
+
+          <ol class="linha-tempo">
+            <li data-revelar="foco" style="--d:0">
+              <span class="lt-ano">1665</span>
+              <h4>Robert Hooke</h4>
+              <p>Observa um pedaço de cortiça ao microscópio e chama os pequenos compartimentos de “células”, porque lembravam pequenos quartos. Ele via só as paredes de células mortas.</p>
+            </li>
+            <li data-revelar="foco" style="--d:1">
+              <span class="lt-ano">Década de 1670</span>
+              <h4>Antonie van Leeuwenhoek</h4>
+              <p>Com lentes que ele mesmo fabricava, observa seres microscópicos vivos, como bactérias e protozoários.</p>
+            </li>
+            <li data-revelar="foco" style="--d:2">
+              <span class="lt-ano">1838 e 1839</span>
+              <h4>Schleiden e Schwann</h4>
+              <p>Schleiden conclui que as plantas são formadas por células. Schwann mostra que o mesmo vale para os animais.</p>
+            </li>
+            <li data-revelar="foco" style="--d:3">
+              <span class="lt-ano">1855</span>
+              <h4>Rudolf Virchow</h4>
+              <p>Divulga a ideia de que toda célula vem de outra célula. Em latim: <em lang="la">omnis cellula e cellula</em>.</p>
+            </li>
+          </ol>
+
+          <h4 class="sub-bloco" data-revelar="foco">Os três pontos da teoria celular</h4>
+          <ul class="cartoes cartoes-3">
+            <li class="cartao" data-revelar="brotar" style="--d:0"><span class="cartao-num">1</span><p>Todos os seres vivos são formados por uma ou mais células.</p></li>
+            <li class="cartao" data-revelar="brotar" style="--d:1"><span class="cartao-num">2</span><p>A célula é a unidade básica de estrutura e de funcionamento dos seres vivos.</p></li>
+            <li class="cartao" data-revelar="brotar" style="--d:2"><span class="cartao-num">3</span><p>Toda célula surge de outra célula que já existia, por divisão.</p></li>
+          </ul>
+          <p class="nota" data-revelar="foco"><strong>E os vírus?</strong> Vírus não são formados por células. Eles só se multiplicam dentro de uma célula. Por isso, muitos cientistas não os consideram seres vivos — e esse ainda é um tema debatido.</p>
+        </article>
+
+        <!-- 2.2 Visor interativo -->
+        <article class="bloco" aria-labelledby="t-visor">
+          <h3 id="t-visor" data-revelar="foco">Explore três células</h3>
+          <p data-revelar="foco">Toque ou clique em uma parte da ilustração (ou num item da lista) para ver o que ela faz. Passe o mouse para usar a <strong>lupa</strong>; no celular, ligue a lupa e arraste o dedo.</p>
+
+          <div class="visor" id="visor-celulas" data-revelar="mascara">
+            <div class="visor-barra">
+              <div class="abas" role="tablist" aria-label="Escolha o tipo de célula">
+                <button class="aba" role="tab" id="aba-animal" aria-controls="painel-animal" aria-selected="true">Animal</button>
+                <button class="aba" role="tab" id="aba-vegetal" aria-controls="painel-vegetal" aria-selected="false" tabindex="-1">Vegetal</button>
+                <button class="aba" role="tab" id="aba-bacteria" aria-controls="painel-bacteria" aria-selected="false" tabindex="-1">Bactéria</button>
+              </div>
+              <div class="visor-ferramentas">
+                <button class="chip" type="button" data-acao="exclusivas" aria-pressed="false">Destacar o que é exclusivo</button>
+                <button class="chip" type="button" data-acao="lupa" aria-pressed="true">Lupa</button>
+              </div>
+            </div>
+
+            <!-- Célula animal -->
+            <div class="visor-painel figura-interativa" role="tabpanel" id="painel-animal" aria-labelledby="aba-animal" data-figura="animal">
+              <div class="figura-palco">
+                <svg class="ilustracao" viewBox="0 0 760 440" role="img" aria-labelledby="t-animal d-animal">
+                  <title id="t-animal">Célula animal em corte</title>
+                  <desc id="d-animal">Célula arredondada com núcleo e nucléolo no centro, retículo endoplasmático rugoso e liso, complexo de Golgi, mitocôndrias, lisossomos, peroxissomo, centríolos, ribossomos e citoesqueleto.</desc>
+                  <g transform="translate(60,0)">
+                    <path class="f-cito" data-parte="citoplasma" d="M320,60 C420,58 500,110 508,200 C516,290 470,370 360,384 C260,396 150,360 132,270 C116,180 200,62 320,60 Z"/>
+                    <g class="f-citoesq" data-parte="citoesqueleto"><path d="M150,300 Q320,400 490,280"/><path d="M200,90 Q420,120 500,210"/><path d="M160,180 Q240,330 400,362"/></g>
+                    <path class="f-membrana" data-parte="membrana" d="M320,60 C420,58 500,110 508,200 C516,290 470,370 360,384 C260,396 150,360 132,270 C116,180 200,62 320,60 Z"/>
+                    <g class="f-rer" data-parte="rer">
+                      <path d="M246.4,277.3 A76,76 0 0 1 246.4,152.7"/><path d="M238.4,288.7 A90,90 0 0 1 238.4,141.3"/><path d="M230.3,300.2 A104,104 0 0 1 230.3,129.8"/>
+                      <path class="ribo" d="M246.4,277.3 A76,76 0 0 1 246.4,152.7"/><path class="ribo" d="M238.4,288.7 A90,90 0 0 1 238.4,141.3"/><path class="ribo" d="M230.3,300.2 A104,104 0 0 1 230.3,129.8"/>
+                    </g>
+                    <g data-parte="nucleo"><circle class="f-nucleo" cx="290" cy="215" r="60"/><circle class="f-poros" cx="290" cy="215" r="60"/><path class="f-cromatina" d="M258,232 q10,-14 20,0 t20,2 M300,250 q8,-10 18,-2 M268,190 q6,-9 14,-2"/></g>
+                    <circle class="f-nucleolo" data-parte="nucleolo" cx="288" cy="205" r="20"/>
+                    <g class="f-rel" data-parte="rel"><rect class="toque" x="236" y="330" width="106" height="40"/><path d="M240,345 q12,-10 24,0 t24,0 t24,0 t24,0"/><path d="M250,362 q12,-10 24,0 t24,0 t24,0"/></g>
+                    <g class="f-golgi" data-parte="golgi"><ellipse class="toque" cx="410" cy="248" rx="40" ry="30"/><path d="M378,226 q30,-20 60,0"/><path d="M382,240 q26,-16 52,0"/><path d="M386,254 q22,-12 44,0"/><path d="M391,267 q17,-9 34,0"/><circle cx="446" cy="234" r="5"/><circle cx="443" cy="254" r="4"/><circle cx="374" cy="264" r="4"/></g>
+                    <g class="f-mito" data-parte="mitocondria">
+                      <g transform="translate(380,335) rotate(-15)"><ellipse rx="34" ry="16"/><path class="cristas" d="M-24,0 l6,-9 l6,18 l6,-18 l6,18 l6,-18 l6,18 l6,-18 l6,9"/></g>
+                      <g transform="translate(420,120) rotate(30)"><ellipse rx="34" ry="16"/><path class="cristas" d="M-24,0 l6,-9 l6,18 l6,-18 l6,18 l6,-18 l6,18 l6,-18 l6,9"/></g>
+                      <g transform="translate(330,97) rotate(-8)"><ellipse rx="30" ry="14"/><path class="cristas" d="M-21,0 l6,-8 l6,16 l6,-16 l6,16 l6,-16 l6,16 l3,-8"/></g>
+                    </g>
+                    <g class="f-liso" data-parte="lisossomo" data-exclusiva><circle cx="455" cy="290" r="12"/><circle cx="340" cy="300" r="10"/><circle class="pt" cx="452" cy="287" r="2"/><circle class="pt" cx="459" cy="293" r="2"/><circle class="pt" cx="338" cy="302" r="2"/></g>
+                    <g class="f-perox" data-parte="peroxissomo"><circle cx="255" cy="92" r="11"/><rect x="250" y="87" width="10" height="10" rx="2"/></g>
+                    <g class="f-centriolo" data-parte="centriolo" data-exclusiva><rect x="456" y="238" width="22" height="8" rx="3"/><rect x="482" y="224" width="8" height="22" rx="3"/></g>
+                    <g class="f-ribo" data-parte="ribossomo"><circle cx="395" cy="170" r="3.4"/><circle cx="403" cy="179" r="3.4"/><circle cx="388" cy="183" r="3.4"/><circle cx="360" cy="150" r="3.4"/><circle cx="430" cy="303" r="3.4"/><circle cx="165" cy="235" r="3.4"/><circle cx="472" cy="180" r="3.4"/><circle cx="312" cy="368" r="3.4"/><circle cx="250" cy="322" r="3.4"/><circle cx="180" cy="200" r="3.4"/></g>
+                    <g class="detalhe" aria-hidden="true"><text x="380" y="314">cristas</text><text x="290" y="146" text-anchor="middle">poros nucleares</text><text x="168" y="122">ribossomos aderidos</text><text x="452" y="270">vesículas</text></g>
+                  </g>
+                </svg>
+              </div>
+              <ol class="legenda" aria-label="Partes da célula animal"></ol>
+            </div>
+
+            <!-- Célula vegetal -->
+            <div class="visor-painel figura-interativa" role="tabpanel" id="painel-vegetal" aria-labelledby="aba-vegetal" data-figura="vegetal" hidden>
+              <div class="figura-palco">
+                <svg class="ilustracao" viewBox="0 0 760 440" role="img" aria-labelledby="t-vegetal d-vegetal">
+                  <title id="t-vegetal">Célula vegetal em corte</title>
+                  <desc id="d-vegetal">Célula de contorno retangular, com parede celular por fora da membrana, um grande vacúolo central, núcleo empurrado para o canto, cloroplastos, mitocôndrias, complexo de Golgi, retículo rugoso e plasmodesmos.</desc>
+                  <g transform="translate(60,0)">
+                    <rect class="f-cito" data-parte="citoplasma" x="140" y="60" width="360" height="320" rx="14"/>
+                    <rect class="f-parede" data-parte="parede" data-exclusiva x="130" y="50" width="380" height="340" rx="22"/>
+                    <rect class="f-membrana" data-parte="membrana" x="140" y="60" width="360" height="320" rx="14"/>
+                    <g class="f-plasmo" data-parte="plasmodesmo" data-exclusiva>
+                      <rect class="corte" x="122" y="235" width="26" height="10"/><path d="M118,240 H152"/>
+                      <rect class="corte" x="492" y="105" width="26" height="10"/><path d="M488,110 H522"/>
+                      <rect class="corte" x="325" y="382" width="10" height="16"/><path d="M330,378 V402"/>
+                    </g>
+                    <path class="f-vacuolo" data-parte="vacuolo" data-exclusiva d="M262,128 C330,105 425,118 442,178 C462,242 446,320 382,336 C312,352 246,332 238,268 C230,210 222,150 262,128 Z"/>
+                    <g class="f-rer" data-parte="rer"><path d="M213,154.8 A46,46 0 0 1 160.4,150.2"/><path d="M218,163.5 A56,56 0 0 1 154,157.9"/><path class="ribo" d="M213,154.8 A46,46 0 0 1 160.4,150.2"/><path class="ribo" d="M218,163.5 A56,56 0 0 1 154,157.9"/></g>
+                    <g data-parte="nucleo"><circle class="f-nucleo" cx="190" cy="115" r="36"/><circle class="f-poros" cx="190" cy="115" r="36"/></g>
+                    <circle class="f-nucleolo" data-parte="nucleolo" cx="182" cy="108" r="12"/>
+                    <g class="f-cloro" data-parte="cloroplasto" data-exclusiva>
+                      <g transform="translate(310,82)"><ellipse rx="24" ry="12"/><path class="grana" d="M-12,-5 v10 M-4,-5 v10 M4,-5 v10 M12,-5 v10"/></g>
+                      <g transform="translate(420,86) rotate(10)"><ellipse rx="24" ry="12"/><path class="grana" d="M-12,-5 v10 M-4,-5 v10 M4,-5 v10 M12,-5 v10"/></g>
+                      <g transform="translate(478,200) rotate(90)"><ellipse rx="24" ry="12"/><path class="grana" d="M-12,-5 v10 M-4,-5 v10 M4,-5 v10 M12,-5 v10"/></g>
+                      <g transform="translate(470,320) rotate(80)"><ellipse rx="24" ry="12"/><path class="grana" d="M-12,-5 v10 M-4,-5 v10 M4,-5 v10 M12,-5 v10"/></g>
+                      <g transform="translate(300,364)"><ellipse rx="24" ry="12"/><path class="grana" d="M-12,-5 v10 M-4,-5 v10 M4,-5 v10 M12,-5 v10"/></g>
+                      <g transform="translate(175,335) rotate(90)"><ellipse rx="24" ry="12"/><path class="grana" d="M-12,-5 v10 M-4,-5 v10 M4,-5 v10 M12,-5 v10"/></g>
+                      <g transform="translate(165,230) rotate(90)"><ellipse rx="24" ry="12"/><path class="grana" d="M-12,-5 v10 M-4,-5 v10 M4,-5 v10 M12,-5 v10"/></g>
+                    </g>
+                    <g class="f-mito" data-parte="mitocondria">
+                      <g transform="translate(230,365)"><ellipse rx="20" ry="9"/><path class="cristas" d="M-14,0 l4,-5 l4,10 l4,-10 l4,10 l4,-10 l4,10 l4,-5"/></g>
+                      <g transform="translate(455,262) rotate(70)"><ellipse rx="20" ry="9"/><path class="cristas" d="M-14,0 l4,-5 l4,10 l4,-10 l4,10 l4,-10 l4,10 l4,-5"/></g>
+                    </g>
+                    <g class="f-golgi" data-parte="golgi"><ellipse class="toque" cx="458" cy="138" rx="24" ry="18"/><path d="M440,128 q18,-12 36,0"/><path d="M443,140 q15,-9 30,0"/><path d="M446,151 q12,-7 24,0"/></g>
+                    <g class="f-ribo" data-parte="ribossomo"><circle cx="210" cy="200" r="3"/><circle cx="355" cy="372" r="3"/><circle cx="485" cy="250" r="3"/><circle cx="260" cy="76" r="3"/><circle cx="200" cy="280" r="3"/></g>
+                    <g class="detalhe" aria-hidden="true"><text x="300" y="396" text-anchor="middle">tilacoides</text><text x="320" y="42" text-anchor="middle">celulose</text><text x="340" y="232" text-anchor="middle">água e sais</text></g>
+                  </g>
+                </svg>
+              </div>
+              <ol class="legenda" aria-label="Partes da célula vegetal"></ol>
+            </div>
+
+            <!-- Bactéria -->
+            <div class="visor-painel figura-interativa" role="tabpanel" id="painel-bacteria" aria-labelledby="aba-bacteria" data-figura="bacteria" hidden>
+              <div class="figura-palco">
+                <svg class="ilustracao" viewBox="0 0 760 440" role="img" aria-labelledby="t-bacteria d-bacteria">
+                  <title id="t-bacteria">Bactéria em corte</title>
+                  <desc id="d-bacteria">Bactéria em forma de bastão, com cápsula, parede celular, membrana, nucleoide com DNA circular, plasmídeos, ribossomos, fímbrias na superfície e um flagelo em uma das pontas.</desc>
+                  <g transform="translate(60,0)">
+                    <g class="f-fimbria" data-parte="fimbria" data-exclusiva><path d="M200,137 L195,118 M240,136 L238,114 M300,136 L303,114 M356,138 L362,117 M220,304 L214,324 M290,304 L292,326 M360,302 L368,322"/></g>
+                    <path class="f-flagelo" data-parte="flagelo" data-exclusiva d="M438,220 c12,-15 24,15 36,0 s24,-15 36,0 s24,15 36,0"/>
+                    <rect class="f-capsula" data-parte="capsula" data-exclusiva x="110" y="135" width="330" height="170" rx="85"/>
+                    <rect class="f-parede-b" data-parte="parede_bact" x="124" y="149" width="302" height="142" rx="71"/>
+                    <rect class="f-cito" data-parte="citoplasma_bact" x="134" y="159" width="282" height="122" rx="61"/>
+                    <rect class="f-membrana" data-parte="membrana_bact" x="134" y="159" width="282" height="122" rx="61"/>
+                    <path class="f-nucleoide" data-parte="nucleoide" data-exclusiva d="M230,215 C240,180 290,185 300,205 C312,230 270,250 255,232 C240,214 280,196 310,214 C340,232 320,262 285,258 C250,254 225,245 230,215 Z"/>
+                    <g class="f-plasmideo" data-parte="plasmideo" data-exclusiva><circle cx="360" cy="195" r="9"/><circle cx="190" cy="250" r="7"/></g>
+                    <g class="f-ribo" data-parte="ribossomo70"><circle cx="170" cy="190" r="3.2"/><circle cx="200" cy="180" r="3.2"/><circle cx="345" cy="250" r="3.2"/><circle cx="375" cy="235" r="3.2"/><circle cx="330" cy="180" r="3.2"/><circle cx="160" cy="222" r="3.2"/><circle cx="215" cy="265" r="3.2"/><circle cx="390" cy="210" r="3.2"/></g>
+                    <g class="detalhe" aria-hidden="true"><text x="275" y="146" text-anchor="middle">peptidoglicano</text><text x="270" y="275" text-anchor="middle">DNA circular</text></g>
+                  </g>
+                </svg>
+              </div>
+              <ol class="legenda" aria-label="Partes da bactéria"></ol>
+            </div>
+          </div>
+        </article>
+
+        <!-- 2.3 Procariontes x eucariontes -->
+        <article class="bloco" aria-labelledby="t-pro-eu">
+          <h3 id="t-pro-eu" data-revelar="foco">Procariontes x eucariontes</h3>
+          <p data-revelar="foco">Imagine duas moradias. A célula <strong>procarionte</strong> é como uma quitinete: tudo fica num cômodo só. A <strong>eucarionte</strong> é como uma casa com vários cômodos: o núcleo e as organelas (pequenos “órgãos” da célula) são separados por membranas.</p>
+
+          <div class="duelo" data-revelar="brotar">
+            <div class="duelo-lado duelo-pro">
+              <svg viewBox="0 0 200 120" aria-hidden="true"><rect class="d-cap" x="20" y="30" width="160" height="60" rx="30"/><path class="d-dna" d="M70,60 c10,-22 40,-18 45,-2 c6,18 -26,24 -30,8 c-4,-14 30,-20 42,-4"/><circle class="d-ribo" cx="52" cy="50" r="3"/><circle class="d-ribo" cx="140" cy="70" r="3"/><circle class="d-ribo" cx="150" cy="48" r="3"/></svg>
+              <h4>Procarionte</h4><p>“Pro” = antes · “cário” = núcleo</p>
+            </div>
+            <span class="duelo-x" aria-hidden="true">×</span>
+            <div class="duelo-lado duelo-eu">
+              <svg viewBox="0 0 200 120" aria-hidden="true"><ellipse class="d-cel" cx="100" cy="60" rx="80" ry="50"/><circle class="d-nuc" cx="92" cy="58" r="22"/><ellipse class="d-mit" cx="148" cy="78" rx="14" ry="7"/><ellipse class="d-mit" cx="50" cy="40" rx="12" ry="6"/></svg>
+              <h4>Eucarionte</h4><p>“Eu” = verdadeiro · “cário” = núcleo</p>
+            </div>
+          </div>
+
+          <div class="tabela-rolagem" data-revelar="foco" tabindex="0" role="region" aria-label="Tabela: procariontes x eucariontes">
+            <table class="tabela">
+              <caption>Comparação entre células procariontes e eucariontes</caption>
+              <thead><tr><th scope="col">Característica</th><th scope="col">Procarionte</th><th scope="col">Eucarionte</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">Núcleo</th><td>Não tem. O DNA fica numa região chamada nucleoide.</td><td>Tem. O DNA fica dentro do núcleo, envolvido pela carioteca (membrana dupla).</td></tr>
+                <tr><th scope="row">Organelas com membrana</th><td>Não tem.</td><td>Tem: mitocôndrias, retículo, Golgi, lisossomos e outras.</td></tr>
+                <tr><th scope="row">Ribossomos</th><td>Sim, menores (70S).</td><td>Sim, maiores (80S).</td></tr>
+                <tr><th scope="row">DNA</th><td>Geralmente uma molécula circular, além de plasmídeos.</td><td>Várias moléculas lineares (os cromossomos).</td></tr>
+                <tr><th scope="row">Tamanho</th><td>Em geral, bem menores.</td><td>Em geral, bem maiores.</td></tr>
+                <tr><th scope="row">Exemplos</th><td>Bactérias e arqueias.</td><td>Animais, plantas, fungos, protozoários e algas.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="nota" data-revelar="foco"><strong>O que é esse “S”?</strong> O S (de Svedberg) indica a velocidade com que uma partícula afunda numa centrífuga. Ele depende do tamanho e da forma, por isso os números não se somam de forma simples.</p>
+        </article>
+
+        <!-- 2.4 Animal x vegetal -->
+        <article class="bloco" aria-labelledby="t-ani-veg">
+          <h3 id="t-ani-veg" data-revelar="foco">Célula animal x célula vegetal</h3>
+          <p data-revelar="foco">As duas são eucariontes e têm muito em comum: membrana, núcleo, mitocôndrias, retículo, Golgi e ribossomos. As diferenças estão ligadas ao modo de vida: a planta fica parada e produz o próprio alimento com a luz.</p>
+
+          <div class="tabela-rolagem" data-revelar="foco" tabindex="0" role="region" aria-label="Tabela: célula animal x célula vegetal">
+            <table class="tabela">
+              <caption>Principais diferenças entre célula animal e célula vegetal</caption>
+              <thead><tr><th scope="col">Estrutura</th><th scope="col">Animal</th><th scope="col">Vegetal</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">Parede celular</th><td><span class="marca-nao">Não tem</span></td><td><span class="marca-sim">Tem</span>, feita principalmente de celulose.</td></tr>
+                <tr><th scope="row">Cloroplastos</th><td><span class="marca-nao">Não tem</span></td><td><span class="marca-sim">Tem</span> (nas partes verdes da planta).</td></tr>
+                <tr><th scope="row">Vacúolo</th><td>Pequenos, quando existem.</td><td>Geralmente um vacúolo central grande.</td></tr>
+                <tr><th scope="row">Centríolos</th><td><span class="marca-sim">Tem</span></td><td>Ausentes na maioria das plantas, como as que dão flores.</td></tr>
+                <tr><th scope="row">Lisossomos</th><td><span class="marca-sim">Tem</span></td><td>Funções parecidas são feitas principalmente pelo vacúolo.</td></tr>
+                <tr><th scope="row">Reserva de energia</th><td>Glicogênio.</td><td>Amido.</td></tr>
+                <tr><th scope="row">Forma</th><td>Variada e mais flexível.</td><td>Mais fixa, por causa da parede.</td></tr>
+                <tr><th scope="row">Ligação com vizinhas</th><td>Junções celulares (veremos adiante).</td><td>Plasmodesmos, canais que atravessam a parede.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="mito-verdade" data-revelar="brotar">
+            <p class="mv-mito"><span>Mito</span> “Planta não tem mitocôndria, porque já tem cloroplasto.”</p>
+            <p class="mv-verdade"><span>Verdade</span> A célula vegetal tem os dois. O cloroplasto produz açúcar com a luz; a mitocôndria quebra esse açúcar para liberar energia, de dia e de noite.</p>
+          </div>
+        </article>
+
+        <aside class="caixa-lembrar" data-revelar="brotar">
+          <h3>Para lembrar</h3>
+          <ul>
+            <li>Todo ser vivo é formado por células, e toda célula vem de outra célula.</li>
+            <li>Procariontes não têm núcleo nem organelas com membrana; eucariontes têm.</li>
+            <li>A célula vegetal tem parede celular, cloroplastos e um grande vacúolo central.</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ===================== 3. MEMBRANA PLASMÁTICA ===================== -->
+    <section id="membrana" class="secao secao-membrana" aria-labelledby="titulo-membrana" data-nav="Membrana">
+      <div class="cortina" aria-hidden="true"><svg viewBox="0 0 1440 80" preserveAspectRatio="none"><path d="M0,80 L0,30 C180,70 300,0 480,30 C660,60 780,10 960,36 C1140,62 1260,4 1440,30 L1440,80 Z"/></svg></div>
+      <div class="secao-interna">
+        <header class="secao-cabeca" data-revelar="mascara">
+          <span class="secao-num" aria-hidden="true">03</span>
+          <p class="kicker">Capítulo 3</p>
+          <h2 id="titulo-membrana">Membrana plasmática</h2>
+          <p class="lead">Uma película fina que separa a célula do mundo lá fora — e decide quem entra e quem sai.</p>
+        </header>
+
+        <aside class="caixa-resumo" data-revelar="onda">
+          <h3>Em resumo</h3>
+          <p>A membrana plasmática envolve toda célula. É feita de <strong>lipídios</strong> (gorduras) e <strong>proteínas</strong>, e escolhe o que entra e o que sai: é a <strong>permeabilidade seletiva</strong>.</p>
+        </aside>
+
+        <!-- Membrana viva (canvas) -->
+        <div class="membrana-viva" data-revelar="onda">
+          <canvas id="canvas-membrana" aria-describedby="mv-descricao"></canvas>
+          <p id="mv-descricao" class="sr">Animação de uma membrana em duas camadas que ondula. Os controles abaixo mudam a temperatura e a presença de colesterol, alterando a fluidez.</p>
+          <div class="mv-controles">
+            <label class="controle">
+              <span>Temperatura</span>
+              <input type="range" id="mv-temp" min="0" max="100" value="55" aria-describedby="mv-fluidez">
+              <span class="controle-escala"><span>Fria</span><span>Quente</span></span>
+            </label>
+            <label class="interruptor">
+              <input type="checkbox" id="mv-colesterol">
+              <span class="interruptor-trilho" aria-hidden="true"></span>
+              <span>Com colesterol</span>
+            </label>
+            <p class="mv-leitura" id="mv-fluidez" aria-live="polite">Fluidez: média</p>
+          </div>
+          <p class="mv-dica">Passe o mouse ou toque na membrana: ela é fluida como um líquido.</p>
+        </div>
+
+        <!-- 3.1 Mosaico fluido -->
+        <article class="bloco" aria-labelledby="t-mosaico">
+          <h3 id="t-mosaico" data-revelar="onda">O modelo do mosaico fluido</h3>
+          <p data-revelar="onda">Em 1972, os cientistas Singer e Nicolson propuseram o modelo usado até hoje. O nome tem duas partes:</p>
+          <ul class="cartoes cartoes-2">
+            <li class="cartao cartao-ciano" data-revelar="onda" style="--d:0">
+              <h4>Mosaico</h4>
+              <p>As proteínas ficam espalhadas entre os lipídios, como as peças coloridas de um mosaico.</p>
+            </li>
+            <li class="cartao cartao-violeta" data-revelar="onda" style="--d:1">
+              <h4>Fluido</h4>
+              <p>Os lipídios e muitas proteínas deslizam para os lados o tempo todo. A membrana se comporta como um líquido, e não como uma casca dura.</p>
+            </li>
+          </ul>
+          <div class="experimento" data-revelar="onda">
+            <svg viewBox="0 0 320 110" aria-hidden="true">
+              <g class="ex-a"><circle cx="60" cy="55" r="38"/><circle class="ex-p1" cx="40" cy="30" r="5"/><circle class="ex-p1" cx="30" cy="62" r="5"/><circle class="ex-p1" cx="50" cy="88" r="5"/><circle class="ex-p2" cx="82" cy="26" r="5"/><circle class="ex-p2" cx="94" cy="60" r="5"/><circle class="ex-p2" cx="78" cy="88" r="5"/></g>
+              <path class="ex-seta" d="M118,55 H162 m-8,-7 l8,7 l-8,7"/>
+              <g class="ex-b"><ellipse cx="240" cy="55" rx="64" ry="40"/><circle class="ex-p1" cx="200" cy="30" r="5"/><circle class="ex-p2" cx="230" cy="18" r="5"/><circle class="ex-p1" cx="268" cy="22" r="5"/><circle class="ex-p2" cx="292" cy="50" r="5"/><circle class="ex-p1" cx="276" cy="86" r="5"/><circle class="ex-p2" cx="236" cy="94" r="5"/><circle class="ex-p1" cx="196" cy="80" r="5"/><circle class="ex-p2" cx="180" cy="52" r="5"/></g>
+            </svg>
+            <div>
+              <h4>Como sabemos que ela é fluida?</h4>
+              <p>Em 1970, Frye e Edidin fundiram uma célula humana com uma de camundongo. As proteínas de cada uma estavam marcadas com uma cor. Pouco tempo depois, as cores estavam misturadas por toda a membrana. No frio, essa mistura ficava bem mais lenta.</p>
+            </div>
+          </div>
+        </article>
+
+        <!-- 3.2 Bicamada -->
+        <article class="bloco" aria-labelledby="t-bicamada">
+          <h3 id="t-bicamada" data-revelar="onda">A bicamada de fosfolipídios</h3>
+          <p data-revelar="onda">O <strong>fosfolipídio</strong> é a peça principal. Ele é <strong>anfipático</strong> (tem uma parte que gosta de água e outra que foge dela):</p>
+          <ul class="lista-icone" data-revelar="onda">
+            <li><span class="bolinha bolinha-ciano" aria-hidden="true"></span><span>A <strong>cabeça hidrofílica</strong> (que gosta de água) tem um grupo fosfato e fica virada para a água.</span></li>
+            <li><span class="bolinha bolinha-ambar" aria-hidden="true"></span><span>As duas <strong>caudas hidrofóbicas</strong> (que fogem da água) ficam escondidas no meio.</span></li>
+          </ul>
+          <p data-revelar="onda">Como existe água dentro e fora da célula, os fosfolipídios se arrumam sozinhos em <strong>duas camadas</strong>: cabeças para fora, caudas para dentro. Pense num sanduíche: o pão são as cabeças, e o recheio oleoso são as caudas.</p>
+
+          <div class="figura-interativa figura-membrana" data-figura="membrana" data-revelar="mascara">
+            <div class="figura-barra">
+              <span class="figura-titulo">Toque nas partes da membrana</span>
+              <button class="chip" type="button" data-acao="lupa" aria-pressed="true">Lupa</button>
+            </div>
+            <div class="figura-palco">
+              <svg class="ilustracao" viewBox="0 0 760 460" role="img" aria-labelledby="t-memb d-memb">
+                <title id="t-memb">Membrana plasmática segundo o modelo do mosaico fluido</title>
+                <desc id="d-memb">Duas camadas de fosfolipídios com as cabeças para fora e as caudas para dentro. Entre eles há colesterol, uma proteína integral que atravessa a membrana, uma proteína de canal com íons passando, uma proteína periférica presa à face de dentro e, na face de fora, cadeias de açúcar que formam o glicocálice.</desc>
+                <text class="regiao" x="380" y="36" text-anchor="middle">FORA DA CÉLULA</text>
+                <text class="regiao" x="380" y="448" text-anchor="middle">DENTRO DA CÉLULA (citoplasma)</text>
+                <path class="f-glicocalice" data-parte="glicocalice" d="M178,180 C230,122 300,96 380,108 C460,122 520,118 588,168 L588,182 L178,182 Z"/>
+                <g class="bicamada" data-gerar="bicamada"></g>
+                <path class="f-prot" data-parte="prot_integral" d="M258,175 C270,160 305,162 314,178 C324,205 318,240 320,262 C322,285 316,305 300,311 C282,318 262,312 256,296 C248,270 254,240 252,215 C250,198 250,185 258,175 Z"/>
+                <g class="f-canal" data-parte="canal">
+                  <path d="M428,178 C438,168 452,170 455,182 L455,298 C452,310 438,312 428,302 C422,270 424,210 428,178 Z"/>
+                  <path d="M465,182 C468,170 482,168 492,178 C496,210 498,270 492,302 C482,312 468,310 465,298 Z"/>
+                  <circle class="ion" cx="460" cy="150" r="4.5"/><circle class="ion ion-2" cx="460" cy="150" r="4.5"/><circle class="ion ion-3" cx="460" cy="150" r="4.5"/>
+                </g>
+                <ellipse class="f-periferica" data-parte="prot_periferica" cx="365" cy="318" rx="26" ry="14"/>
+                <g class="f-acucar" data-parte="glicoproteina"><path d="M285,166 L279,148 L287,136 L281,124 L291,113 M287,136 L297,142"/><circle cx="279" cy="148" r="5"/><circle cx="287" cy="136" r="5"/><circle cx="281" cy="124" r="5"/><circle cx="291" cy="113" r="5"/><circle cx="297" cy="142" r="5"/></g>
+                <g class="f-acucar" data-parte="glicolipidio"><path d="M504,182 L498,166 L506,155 L500,144"/><circle cx="498" cy="166" r="5"/><circle cx="506" cy="155" r="5"/><circle cx="500" cy="144" r="5"/></g>
+                <g class="f-acucar" data-parte="glicoproteina"><path d="M478,170 L484,157 L478,146"/><circle cx="484" cy="157" r="5"/><circle cx="478" cy="146" r="5"/></g>
+                <g class="detalhe" aria-hidden="true"><text x="216" y="181">fosfato</text><text x="380" y="245" text-anchor="middle">ácidos graxos</text><text x="468" y="330">íons</text></g>
+              </svg>
+            </div>
+            <ol class="legenda" aria-label="Partes da membrana plasmática"></ol>
+          </div>
+        </article>
+
+        <!-- 3.3 Componentes -->
+        <article class="bloco" aria-labelledby="t-componentes">
+          <h3 id="t-componentes" data-revelar="onda">Quem mais mora na membrana</h3>
+          <ul class="cartoes cartoes-2">
+            <li class="cartao cartao-coral" data-revelar="onda" style="--d:0">
+              <h4>Colesterol</h4>
+              <p>Fica encaixado entre os fosfolipídios, nas células animais. Regula a fluidez: nem mole demais, nem dura demais.</p>
+            </li>
+            <li class="cartao cartao-violeta" data-revelar="onda" style="--d:1">
+              <h4>Proteínas integrais</h4>
+              <p>Ficam mergulhadas na bicamada; muitas a atravessam de lado a lado (transmembrana). São canais, carreadoras (transportadoras), receptores e pontos de ligação.</p>
+            </li>
+            <li class="cartao cartao-ambar" data-revelar="onda" style="--d:2">
+              <h4>Proteínas periféricas</h4>
+              <p>Ficam presas na superfície, sem atravessar a membrana. Muitas ajudam a prender o citoesqueleto (o “esqueleto” interno da célula).</p>
+            </li>
+            <li class="cartao cartao-lima" data-revelar="onda" style="--d:3">
+              <h4>Glicocálice</h4>
+              <p>Cadeias de açúcar presas a proteínas e lipídios, na face de fora. Protegem a célula e funcionam como um crachá de identificação.</p>
+            </li>
+          </ul>
+
+          <div class="analogia" data-revelar="onda">
+            <svg viewBox="0 0 120 120" aria-hidden="true"><rect class="an-predio" x="30" y="18" width="60" height="86" rx="6"/><rect class="an-porta" x="50" y="74" width="20" height="30" rx="3"/><g class="an-janelas"><rect x="40" y="30" width="12" height="10"/><rect x="68" y="30" width="12" height="10"/><rect x="40" y="50" width="12" height="10"/><rect x="68" y="50" width="12" height="10"/></g><path class="an-chao" d="M10,104 H110"/></svg>
+            <div>
+              <h4>A membrana é a portaria de um prédio</h4>
+              <ul>
+                <li><strong>Porteiro e catracas</strong> = proteínas de transporte, que deixam passar só o que é permitido.</li>
+                <li><strong>Interfone</strong> = proteínas receptoras, que recebem mensagens de fora (como hormônios) sem a mensagem precisar entrar.</li>
+                <li><strong>Crachá dos moradores</strong> = glicocálice, que identifica as células do próprio corpo.</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <!-- 3.4 Fluidez -->
+        <article class="bloco" aria-labelledby="t-fluidez">
+          <h3 id="t-fluidez" data-revelar="onda">Fluidez: o que deixa a membrana mais mole ou mais dura</h3>
+          <p data-revelar="onda">Pense na manteiga: na geladeira ela fica dura; fora, amolece. Com a membrana acontece algo parecido. Teste no simulador lá em cima.</p>
+          <div class="tabela-rolagem" data-revelar="onda" tabindex="0" role="region" aria-label="Tabela: fatores que alteram a fluidez">
+            <table class="tabela">
+              <caption>Fatores que alteram a fluidez da membrana</caption>
+              <thead><tr><th scope="col">Fator</th><th scope="col">Efeito na fluidez</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">Temperatura mais alta</th><td><span class="seta-cima">Aumenta</span> — as moléculas se agitam mais.</td></tr>
+                <tr><th scope="row">Caudas insaturadas (com “dobras”)</th><td><span class="seta-cima">Aumenta</span> — as dobras impedem que os fosfolipídios fiquem muito juntos. É por isso que óleos são líquidos e gorduras saturadas, como a manteiga, são sólidas em temperatura ambiente.</td></tr>
+                <tr><th scope="row">Caudas mais curtas</th><td><span class="seta-cima">Aumenta</span> — há menos contato entre elas.</td></tr>
+                <tr><th scope="row">Colesterol</th><td><span class="seta-tampao">Funciona como tampão</span> — no calor, diminui a fluidez; no frio, evita que a membrana endureça.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <!-- 3.5 Permeabilidade seletiva -->
+        <article class="bloco" aria-labelledby="t-perme">
+          <h3 id="t-perme" data-revelar="onda">Permeabilidade seletiva: quem passa e quem não passa</h3>
+          <p data-revelar="onda">O meio da membrana é oleoso. Por isso, ele deixa passar com facilidade o que se mistura com óleo e barra o que tem carga elétrica.</p>
+          <ul class="perme">
+            <li class="perme-col perme-passa" data-revelar="onda" style="--d:0">
+              <div class="perme-anim" aria-hidden="true"><span class="pm-linha"></span><span class="pm-mol pm-atravessa"></span></div>
+              <h4>Passam com facilidade</h4>
+              <p>Gases como oxigênio (O<sub>2</sub>) e gás carbônico (CO<sub>2</sub>) e moléculas pequenas que se misturam com gordura, como os hormônios esteroides.</p>
+            </li>
+            <li class="perme-col perme-ajuda" data-revelar="onda" style="--d:1">
+              <div class="perme-anim" aria-hidden="true"><span class="pm-linha"></span><span class="pm-porta"></span><span class="pm-mol pm-pela-porta"></span></div>
+              <h4>Passam pouco ou precisam de ajuda</h4>
+              <p>A água passa um pouco pela bicamada, mas muito mais rápido pelas aquaporinas (canais de água). Glicose e aminoácidos precisam de proteínas transportadoras.</p>
+            </li>
+            <li class="perme-col perme-barra" data-revelar="onda" style="--d:2">
+              <div class="perme-anim" aria-hidden="true"><span class="pm-linha"></span><span class="pm-mol pm-bate"></span></div>
+              <h4>Não atravessam a bicamada sozinhos</h4>
+              <p>Íons (partículas com carga elétrica), como sódio (Na<sup>+</sup>) e potássio (K<sup>+</sup>), usam canais e bombas. Partículas grandes entram e saem em bolsas (endocitose e exocitose).</p>
+            </li>
+          </ul>
+          <p class="nota" data-revelar="onda">Os tipos de transporte (difusão, osmose, bomba de sódio e potássio e outros) ganham um capítulo só deles, com simuladores.</p>
+        </article>
+
+        <!-- 3.6 Funções -->
+        <article class="bloco" aria-labelledby="t-funcoes">
+          <h3 id="t-funcoes" data-revelar="onda">Funções da membrana</h3>
+          <ol class="funcoes">
+            <li data-revelar="onda" style="--d:0"><strong>Delimitar</strong> a célula e separar o meio de dentro do meio de fora.</li>
+            <li data-revelar="onda" style="--d:1"><strong>Controlar</strong> a entrada e a saída de substâncias.</li>
+            <li data-revelar="onda" style="--d:2"><strong>Receber sinais</strong> de outras células, por meio de receptores.</li>
+            <li data-revelar="onda" style="--d:3"><strong>Reconhecer</strong> outras células, graças ao glicocálice.</li>
+            <li data-revelar="onda" style="--d:4"><strong>Unir</strong> células vizinhas, formando os tecidos.</li>
+            <li data-revelar="onda" style="--d:5"><strong>Ancorar</strong> o citoesqueleto, ajudando a manter a forma da célula.</li>
+          </ol>
+        </article>
+
+        <aside class="caixa-lembrar" data-revelar="onda">
+          <h3>Para lembrar</h3>
+          <ul>
+            <li>A membrana é uma bicamada de fosfolipídios com proteínas espalhadas: o mosaico fluido.</li>
+            <li>Cabeças hidrofílicas ficam para fora; caudas hidrofóbicas ficam no meio.</li>
+            <li>Ela é seletiva: gases passam fácil; íons e moléculas grandes precisam de ajuda.</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="rodape" id="rodape">
+    <div class="rodape-interno">
+      <div>
+        <p class="rodape-marca">Menor<b>Unidade</b></p>
+        <p class="aviso"><strong>Aviso:</strong> este é um site educativo. Ele não substitui livros didáticos, aulas nem orientação de profissionais de saúde.</p>
+      </div>
+      <div>
+        <h2 class="rodape-titulo">Fontes de referência</h2>
+        <ul class="fontes">
+          <li>JUNQUEIRA, L. C.; CARNEIRO, J. <cite>Histologia Básica</cite>. Rio de Janeiro: Guanabara Koogan.</li>
+          <li>ALBERTS, B. et al. <cite>Biologia Molecular da Célula</cite>. Porto Alegre: Artmed.</li>
+          <li>HALL, J. E.; GUYTON, A. C. <cite>Tratado de Fisiologia Médica</cite>. Rio de Janeiro: Elsevier.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="rodape-base">Ilustrações e animações feitas em código para este site. <a href="#inicio">Voltar ao topo ↑</a></p>
+  </footer>
+
+  <!-- Painel de informações (abre ao tocar numa parte das ilustrações) -->
+  <aside class="painel" id="painel" role="dialog" aria-modal="false" aria-labelledby="painel-titulo" hidden>
+    <button class="painel-fechar" type="button" aria-label="Fechar painel">×</button>
+    <p class="painel-tag" id="painel-tag"></p>
+    <h3 class="painel-titulo" id="painel-titulo" tabindex="-1"></h3>
+    <div class="painel-bloco"><h4>O que faz</h4><p id="painel-funcao"></p></div>
+    <div class="painel-bloco painel-curiosidade"><h4>Curiosidade</h4><p id="painel-curiosidade"></p></div>
+  </aside>
+
+  <script src="js/dados.js" defer></script>
+  <script src="js/core.js" defer></script>
+  <script src="js/animacoes.js" defer></script>
+  <script>
+    // Segurança: se os scripts não carregarem, mostra todo o conteúdo mesmo assim
+    setTimeout(function () { if (!window.Celula) document.documentElement.classList.remove('js'); }, 3000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+/* =========================================================
+   animacoes.css — keyframes, revelações e microinterações
+   Cada seção tem sua "identidade" de entrada:
+   - A célula: "foco" (como ajustar o foco do microscópio) e "brotar"
+   - Membrana: "onda" (como a superfície de um líquido)
+   - Ilustrações: "mascara" (abertura em forma de célula)
+   Tudo é desligado com prefers-reduced-motion ou com o botão de animações.
+   ========================================================= */
+
+/* ---------- Revelações (ativadas por IntersectionObserver em core.js) ---------- */
+.js [data-revelar] {
+  transition:
+    opacity .9s var(--ease) calc(var(--d, 0) * 90ms),
+    transform 1s var(--ease) calc(var(--d, 0) * 90ms),
+    filter 1s var(--ease) calc(var(--d, 0) * 90ms),
+    clip-path 1.2s var(--ease) calc(var(--d, 0) * 90ms);
+}
+.js [data-revelar="foco"]:not(.visivel) { opacity: 0; filter: blur(9px); transform: scale(1.035); }
+.js [data-revelar="brotar"]:not(.visivel) { opacity: 0; transform: scale(.82) translateY(24px); }
+.js [data-revelar="onda"]:not(.visivel) { opacity: 0; transform: translateY(34px) skewY(2.5deg); transform-origin: left; }
+.js [data-revelar="mascara"] { clip-path: ellipse(150% 150% at 50% 50%); }
+.js [data-revelar="mascara"]:not(.visivel) { clip-path: ellipse(0% 0% at 50% 40%); }
+[data-revelar="brotar"].visivel { transition-timing-function: var(--ease-mola); }
+
+/* Linha do tempo: a linha cresce conforme a rolagem (quando o navegador permite) */
+@supports (animation-timeline: view()) {
+  .linha-tempo::before { animation: crescer-y linear both; animation-timeline: view(); animation-range: entry 10% cover 60%; }
+  .secao-num { animation: deriva linear both; animation-timeline: view(); animation-range: entry 0% exit 100%; }
+  .cortina svg { animation: cortina-ondula linear both; animation-timeline: view(); animation-range: entry 0% exit 60%; }
+}
+@keyframes crescer-y { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+@keyframes deriva { from { transform: translateY(35%) rotate(-3deg); } to { transform: translateY(-35%) rotate(3deg); } }
+@keyframes cortina-ondula { from { transform: translateX(0) scaleY(.2); } to { transform: translateX(-50%) scaleY(1); } }
+
+/* ---------- Título letra por letra ---------- */
+.js .hero-titulo[data-letras] .letra {
+  opacity: 0; transform: translateY(.55em) rotate(var(--r, 6deg)) scale(.6); filter: blur(10px);
+  animation: letra-surge .9s var(--ease-mola) forwards;
+  animation-delay: calc(1.1s + var(--i) * 42ms);
+}
+@keyframes letra-surge { to { opacity: 1; transform: none; filter: blur(0); } }
+.js .hero-kicker, .js .hero-sub, .js .hero-acoes { opacity: 0; transform: translateY(16px); animation: subir .9s var(--ease) forwards; }
+.js .hero-kicker { animation-delay: .7s; }
+.js .hero-sub { animation-delay: 2.3s; }
+.js .hero-acoes { animation-delay: 2.6s; }
+@keyframes subir { to { opacity: 1; transform: none; } }
+
+/* Saída do hero durante o mergulho (variável --mergulho de 0 a 1, controlada por JS) */
+.hero-conteudo { opacity: calc(1 - var(--mergulho, 0) * 2.2); transform: translateY(calc(var(--mergulho, 0) * -90px)) scale(calc(1 - var(--mergulho, 0) * .12)); filter: blur(calc(var(--mergulho, 0) * 10px)); }
+.hero-rolar { opacity: calc(1 - var(--mergulho, 0) * 5); }
+
+/* ---------- Keyframes de microinterações ---------- */
+@keyframes pulso { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--lima) 60%, transparent); } 100% { box-shadow: 0 0 0 14px transparent; } }
+@keyframes rolar { 0% { transform: translateY(0); opacity: 1; } 70% { transform: translateY(12px); opacity: 0; } 100% { opacity: 0; } }
+@keyframes gira { to { transform: rotate(360deg); } }
+@keyframes marca-gira { 50% { transform: rotate(-20deg) scale(1.15); } }
+@keyframes alvo { 0% { transform: scale(.7); opacity: 1; } 100% { transform: scale(2.4); opacity: 0; } }
+
+/* Partes "exclusivas" pulsando no visor */
+.visor.destacar .ilustracao [data-parte]:not([data-exclusiva]) { opacity: .2; }
+.visor.destacar .ilustracao [data-exclusiva] { animation: exclusiva 1.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes exclusiva { 50% { filter: drop-shadow(0 0 8px var(--lima)) brightness(1.4); } }
+
+/* Troca de aba: a célula "se forma" (zoom + desfoque) */
+.visor-painel.entrando .ilustracao { animation: celula-entra .7s var(--ease); }
+@keyframes celula-entra { from { opacity: 0; transform: scale(.88); filter: blur(8px); } }
+
+/* Parte escolhida: pequeno "pulo" */
+.ilustracao [data-parte].ativa:not(use) { animation: parte-pulo .6s var(--ease-mola); transform-box: fill-box; transform-origin: center; }
+@keyframes parte-pulo { 40% { transform: scale(1.06); } }
+
+/* Painel abre como uma célula se expandindo */
+.painel.abrindo { animation: painel-abre .55s var(--ease-mola); transform-origin: var(--ox, 90%) var(--oy, 90%); }
+@keyframes painel-abre { from { opacity: 0; transform: scale(.4); border-radius: 50%; } }
+
+/* Íons descendo pelo canal da membrana */
+.f-canal .ion { animation: ion-desce 3.6s linear infinite; }
+.f-canal .ion-2 { animation-delay: -1.2s; }
+.f-canal .ion-3 { animation-delay: -2.4s; }
+@keyframes ion-desce { 0% { transform: translateY(0); opacity: 0; } 10% { opacity: 1; } 85% { opacity: 1; } 100% { transform: translateY(190px); opacity: 0; } }
+
+/* Mini-animações da permeabilidade seletiva */
+.pm-atravessa { animation: pm-atravessa 2.6s var(--ease) infinite; }
+@keyframes pm-atravessa { 0% { left: 10%; } 60%, 100% { left: 82%; } 0%, 100% { opacity: 1; } }
+.pm-pela-porta { animation: pm-porta 3s var(--ease) infinite; }
+@keyframes pm-porta { 0% { left: 10%; } 35% { left: calc(50% - 7px); transform: scale(.7); } 55% { left: calc(50% - 7px); transform: scale(.7); } 85%, 100% { left: 82%; transform: none; } }
+.pm-porta { animation: porta-pisca 3s infinite; }
+@keyframes porta-pisca { 35%, 55% { background: var(--ambar); } }
+.pm-bate { animation: pm-bate 2s var(--ease) infinite; }
+@keyframes pm-bate { 0% { left: 10%; } 45% { left: calc(50% - 22px); transform: scaleX(.75); } 55% { left: calc(50% - 26px); transform: none; } 100% { left: 10%; } }
+
+/* Rótulo do visor: linha "se desenha" ao aparecer */
+.figura-interativa.visivel .rot-linha, .visor.visivel .rot-linha { stroke-dasharray: 400; stroke-dashoffset: 400; animation: desenha 1.2s var(--ease) forwards; animation-delay: calc(var(--n, 0) * 60ms + .3s); }
+@keyframes desenha { to { stroke-dashoffset: 0; } }
+
+/* Barra de seção: o número gigante pulsa quando a seção está ativa */
+.secao.atual .secao-num { -webkit-text-stroke-color: color-mix(in srgb, var(--lima) 35%, var(--borda)); transition: -webkit-text-stroke-color 1s; }
+
+/* ---------- Cursor em forma de molécula ---------- */
+html.cursor-molecula, html.cursor-molecula * { cursor: none !important; }
+html.cursor-molecula input[type="range"] { cursor: none !important; }
+.cursor-mol { position: fixed; left: 0; top: 0; z-index: 9999; pointer-events: none; width: 0; height: 0; }
+.cursor-mol .atomo { position: absolute; border-radius: 50%; transform: translate(-50%, -50%); }
+.cursor-mol .a0 { width: 12px; height: 12px; background: var(--lima); box-shadow: 0 0 14px var(--lima); transition: width .25s var(--ease-mola), height .25s var(--ease-mola), background-color .25s; }
+.cursor-mol .a1 { width: 9px; height: 9px; background: var(--ciano); opacity: .85; }
+.cursor-mol .a2 { width: 7px; height: 7px; background: var(--coral); opacity: .8; }
+.cursor-mol svg { position: absolute; left: 0; top: 0; overflow: visible; }
+.cursor-mol line { stroke: var(--texto-2); stroke-width: 1.5; opacity: .6; }
+.cursor-mol.sobre .a0 { width: 30px; height: 30px; background: transparent; border: 2px solid var(--lima); }
+.cursor-mol.oculto { opacity: 0; }
+
+/* ---------- Movimento reduzido / animações desligadas ---------- */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+html.sem-efeitos { scroll-behavior: auto; }
+html.sem-efeitos *, html.sem-efeitos *::before, html.sem-efeitos *::after { animation: none !important; transition-duration: .01ms !important; }
+
+/* Com movimento reduzido, nada fica escondido esperando a rolagem */
+@media (prefers-reduced-motion: reduce) {
+  .js [data-revelar] { opacity: 1 !important; filter: none !important; transform: none !important; clip-path: none !important; }
+  .js .hero-titulo[data-letras] .letra, .js .hero-kicker, .js .hero-sub, .js .hero-acoes { opacity: 1 !important; transform: none !important; filter: none !important; }
+}
+html.sem-efeitos [data-revelar] { opacity: 1 !important; filter: none !important; transform: none !important; clip-path: none !important; }
+html.sem-efeitos .hero-titulo .letra, html.sem-efeitos .hero-kicker, html.sem-efeitos .hero-sub, html.sem-efeitos .hero-acoes { opacity: 1 !important; transform: none !important; filter: none !important; }
+
+/* Hero e viagem em versão estática (sem rolagem "presa") */
+html.estatico .hero { height: auto; }
+html.estatico .hero-palco { position: relative; height: 100vh; height: 100svh; }
+html.estatico .hero-portal { display: none; }
+html.estatico .hero-conteudo { opacity: 1; transform: none; filter: none; }
+html.estatico .viagem { height: auto; }
+html.estatico .viagem-palco { position: relative; height: auto; display: block; padding-bottom: 3rem; }
+html.estatico .viagem-janela { width: 100%; max-width: 1100px; aspect-ratio: auto; border-radius: 0; display: block; margin: 1.5rem auto 0; }
+html.estatico .viagem-lente { display: none; }
+html.estatico .viagem-recorte { position: static; clip-path: none; border-radius: 0; overflow: visible; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+html.estatico .escala { position: relative; inset: auto; opacity: 1 !important; transform: none !important; aspect-ratio: 1; border-radius: 50%; background: var(--fundo); border: 1px solid var(--borda); overflow: hidden; }
+html.estatico .viagem-legendas { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); width: 100%; max-width: 1100px; margin-top: 1rem; }
+html.estatico .viagem-legendas li { position: static; opacity: 1; transform: none; }
+html.estatico .viagem-regua, html.estatico .viagem-dica { display: none; }
